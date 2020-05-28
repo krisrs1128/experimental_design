@@ -1,42 +1,140 @@
 
-September 3 Lecture - Intro Theory
-September 8 / 9 Discussion -
-September 10 Lecture - Comparisons
-September 15 / 16 Discussion -
-September 17 Lecture - One Factor pt. 1
-September 22 / 23 Discussion -
-September 24 Lecture -
-September 29 / 30
-October 1 Lecture -
-October 6 / 7 Discussion -
-October 8 Lecture
-October 13 / 14 Discussion -
-October 15 Lecture -
-October 20 / 21 Discussion -
-October 22 Lecture -
-October 27 / 28 Discussion -
-October 29 Lecture -
-November 3 / 4 Discussion -
-November 5 Lecture -
-November 10 / 11 Discussion -
-November 12 Lecture -
-November 17 / 18 Discussion -
-November 19 Lecture -
-November 24 / 25 Discussion -
-December 1 / 2 Discussion -
-December 3 Lecture -
-December 8 / 9 Discussion -
-December 10 Lecture - Course Review
+Lecture 1
+September 3
+title: Intro to Experimental Design
+topic:
+  - Course logistics
+  - What is experimental design?
+  - Core principles of exdes
+reading: Chapter 1
 
 
+Discussion 1
+title: Introduction to R
+date: September 8 / 9
+
+Lecture 2
+title: Simple Comparative Experiments
+date: September 10
+topic:
+  - t-test (equal variance)
+  - t-test (unequal variance)
+  - methods: t-test (equal variance), t-test (unequal variance), paired t-test
+  - regression interpretations
+  - properties of paired vs. unpaired tests
+reading: Chapter 2.4 - 2.6
+
+Discussion 2
+title: Statistics review & comparative experiments
+date: September 15 / 16
+
+Lecture 3
+title: Single Factor Models pt. 1 + (2) 
+date: September 17
+reading: 3.4, 3.5
+topic:
 
 
+Discussion 3
+title: Diagnostics and Comparisons
+date: September 22 / 23
+topic:
+- Model diagnostics for single factor
+- Multiple comparisons for single factor
 
-13-Random_Factorial.html	3_OneFactor_Part1.html		4-2_LatinSquare.html		5-Factorial_Part2.html		7-Blocking_2k.html
-13-Random_Factorial.pdf		3_OneFactor_Part1.pdf		4-2_LatinSquare.pdf		5-Factorial_Part2.pdf		7-Blocking_2k.pdf
-14-Split_Plot.html		3_OneFactor_Part2.html		4-3_GraecoLatin.html		6-2k_Factorial_Part1.html	8-Fractional_Factorial.html
-14-Split_Plot.pdf		3_OneFactor_Part2.pdf		4-3_GraecoLatin.pdf		6-2k_Factorial_Part1.pdf	8-Fractional_Factorial.pdf
-1_Intro.html			3_OneFactor_Part3.html		4-4_BIBD.html			6-2k_Factorial_Part2.html	Miscellaneous.html
-1_Intro.pdf			3_OneFactor_Part3.pdf		4-4_BIBD.pdf			6-2k_Factorial_Part2.pdf	Miscellaneous.pdf
-2_Comparative.html		4-1_RCBD.html			5-Factorial_Part1.html		6-2k_Factorial_Part3.html
-2_Comparative.pdf		4-1_RCBD.pdf			5-Factorial_Part1.pdf		6-2k_Factorial_Part3.pdf
+
+Lecture 4
+date: September 24
+title: Single Factor Models pt. (2) + 3
+topic:
+
+
+Discussion 4
+title: Random effects and blocking
+date: September 29 / 30
+topic:
+- Random effects
+- Blocking
+
+
+Lecture 5
+title: 
+date: October 1
+
+
+Discussion 5
+title: 
+date: October 6 / 7
+
+
+Midterm Exam # 1
+date: October 8
+
+
+Discussion 6
+date: October 13 / 14
+
+
+Lecture 6
+date: October 15
+
+
+Discussion 7
+date: October 20 / 21
+
+
+Lecture 7 
+date: October 22
+
+
+Discussion 8
+date: October 27 / 28 
+
+
+Lecture 8
+date: October 29
+
+
+Discussion 9
+date: November 3 / 4 
+
+
+Lecture 9
+date: November 5
+
+
+Discussion 10
+date: November 10 / 11 
+
+
+Midterm Exam # 2
+date: November 12
+
+
+Discussion 11
+date: November 17 / 18 
+
+
+Lecture 10
+date: November 19
+
+
+Discussion 12
+date: November 24 / 25 
+
+
+Discussion 13
+date: December 1 / 2 
+
+Lecture 11
+date: December 3
+
+
+Discussion 14
+date: December 8 / 9 
+
+
+Lecture 12
+title: Course Review
+date: December 10
+
