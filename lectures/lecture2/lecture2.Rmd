@@ -254,6 +254,8 @@ this look like if $n_{1} \gg n_{2}$.
 
 ## Code example
 
+
+
 # Test when sigma[1] != sigma[2]
 
 What happens if the variances in the two groups are not the same?
