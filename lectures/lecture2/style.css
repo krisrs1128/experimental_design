@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&family=Proza+Libre&display=swap');
+
+/* Whole document: */
+body{
+    font-family: 'Montserrat';
+    font-size: 14pt;
+}
+
+/* Headers */
+h1 {
+    font-size: 25pt;
+    font-family: 'Proza Libre';
+}
+
+h2 {
+    font-size: 18pt;
+    font-family: 'Proza Libre';
+}
+
+h3 {
+    font-size: 16pt;
+    font-family: 'Proza Libre';
+}

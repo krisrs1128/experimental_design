@@ -1,0 +1,4 @@
+Type: Compendium
+Package: Stats424Lec2
+Version: 0.1.0
+Depends: dplyr, ggplot2, tibble, readr

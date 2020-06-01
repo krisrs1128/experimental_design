@@ -1,0 +1,349 @@
+---
+title: Simple Comparative Experiments
+date: September 10, 2020
+subtitle: Chapter 2.4 - 2.6
+output:
+  html_document:
+    css: style.css
+---
+
+&nbsp;
+
+# Setup and Motivation
+
+What is the problem?
+
+* Imagine that we ran an experiment under two treatment conditions, to see if
+  they had different effects on a downstream, continuous response.
+* How can you quantify the difference in effects (if any) between treatments?
+
+&nbsp;
+
+Common Examples
+
+* Drug and placebo in a pharmaceutical trial (outcome = cholesterol level)
+* Alternative manufacturing process (outcome = number of defects per 1000 units)
+* Two designs of a web page (outcome = number of users who donate)
+
+&nbsp;
+
+_Learning Objective_: After studying this section, you should be able to,
+
+* Recognize a comparative experiment in the while, and know which type of test
+  ($z$-test, $t$-test with equal variances, $t$-test with unequal variances, or
+  paired $t$-test) is appropriate
+* For each of these tests, be able to perform calculations needed to provide
+  hypothesis tests, $p$-values, and confidence intervals.
+
+## Example
+
+A company has run an experiment comparing the strength of concrete made using
+two different mixes of chemicals. The question is, do the mixes have the same
+strength? If you ran the experiment again, how sure can you be that your
+conclusion will stand?
+
+Here are all `${x}` observations,
+
+```{r}
+# read in data
+```
+
+## Formalization
+
+Now we'll make this more formal, building the mathematical abstraction that we
+can apply in many situations.
+
+Arrange the data from the two treatments into two rows,
+
+$$
+y_{11}, y_{12}, \dots, y_{1n_{1}} \\
+y_{21}, y_{22}, \dots, y_{2n_{2}},
+$$
+
+so that $y_{ij}$ corresponds to the $j^{th}$ observation in the $i^{th}$
+treatment. $n_{1}$ and $n_{2}$ denote the number of samples given each
+treatment.
+
+In order to make any sorts of probabilistic statements about what would happen
+if we ran the experiment again, we need to assume a model that generated the
+data. In this set of notes, we'll consider,
+
+$$
+y_{ij} = \mu_{i} + \epsilon_{ij} \\
+\epsilon_{ij} \overset{i.i.d.}{\sim} \mathcal{N}\left(0, \sigma_{j}^{2}\right),
+$$
+
+a Gaussian model with potentially different means and variances in each
+treatment $i$. Different types of tests correspond to different constraints on
+the possible values of the $\mu_{i}$'s and $\sigma_{i}$'s.
+
+![](figures/comparative_setup.png)
+&nbsp;
+
+
+For hypothesis testing, we're interested in testing the null,
+
+$$
+H_{0}: \mu_{1} = \mu_{2}
+$$
+
+against one of three alternatives,
+
+$$
+H_{a1}: \mu_{1} \neq \mu_{2} \\
+H_{a2}: \mu_{1} > \mu_{2} \\
+H_{a3}: \mu_{1} < \mu_{2} \\
+$$
+
+# Tests assuming $\sigma^2_{1} = \sigma^2_{2}$
+
+It's natural to estimate $\mu_{1}$ and $\mu_{2}$ by the corresponding sample
+means, $\bar{y}_{1}$ and $\bar{y}_{2}$, respectively. If we want to see whether
+$\mu_{1} = \mu_{2}$, we can then consider the size of $\bar{y}_{1} -
+\bar{y}_{2}$: values that are very positive or very negative provide evidence
+against the null hypothesis. But, how large is large?
+
+If we knew that $\sigma^2_{1} = \sigma^2_{2} := \sigma^2$, then observe that
+
+$$
+\text{Var}\left(\bar{y}_{1} - \bar{y}_{2}\right) = \text{Var}\left(\bar{y}_{1}\right) + \text{Var}\left(\bar{y}_{2}\right) \\
+= \frac{\sigma^2}{n_1} + \frac{\sigma^2}{n_2} \\
+= \sigma^2 \left(\frac{1}{n_1} + \frac{1}{n_2}\right)
+$$
+
+and since under the null, the expected difference is 0, we have (why[^1]?)
+$$
+Z:= \frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}} \sim \mathcal{N}\left(0, 1\right).
+$$
+
+This is a very useful result, because it gives us a *reference
+distribution* for our test statistic. If we want to tell whether a observed
+value of the statistic is consistent with the null hypothesis, we can see
+whether or not it falls into the bulk of the reference distribution.
+
+Which of these test statistics is consistent with the $\mathcal{N}\left(0,
+1\right)$ null?
+
+<img src="figures/reference_distn_moderate.png" width="300"/>
+<img src="figures/reference_distn_extreme.png" width="300"/>
+<img src="figures/reference_distn_null.png" width="300"/>
+
+## Estimating $\sigma^2$
+
+The above derivation treated sigma as a fixed, known constant. In reality, it
+must be estimated as well. We can use,
+
+$$
+s_{p}^2 = \frac{1}{n_1 + n_2 - 2}\left[\sum_{j = 1}^{n_{1}} \left(y_{1j} - \bar{y}_1\right)^2 + \sum_{j = 1}^{n_{2}} \left(y_{2j} - \bar{y}_{2}\right)^2\right] \\
+= \frac{1}{n_1 + n_2} \left[\left(n_1 - 1\right)s_{1}^2 + \left(n_2 - 1\right)s_{2}^{2}\right]
+$$
+
+<img src="figures/pooled_standard_error.png" width="300"/>
+
+which looks at the squared deviations from the mean within each group. It's the
+two-group generalization of the usual standard error estimate, where the groups
+have the same variances but not necessarily the same means.
+
+The reference distribution needs to account for the extra randomness coming from
+estimating $\sigma^2$. The updated reference is
+
+$$
+T = \frac{\bar{y}_1 - \bar{y}_2}{s_p\sqrt{\frac{1}{n_1} + \frac{1}{n_2}}} \sim t(n_1 + n_2 - 2)
+$$
+
+which has slightly heavier tails than the normal distribution.
+
+## Recipe
+
+In either the known or estimated $\sigma^2$ case, we can now use our test
+statistics and their reference distributions to (1) perform hypothesis tests,
+(2) compute of $p$-values, and (3) build confidence intervals.
+
+**Hypothesis Testing**:
+* To perform a level $\alpha$ test of the null hypothesis, we see whether the
+  test statistic lies in the rejection rejection specified by the reference
+  distribution. The rejection regions for $H_{a1}, H_{a2}$, or $H_{a3}$ are
+  sketched below.
+
+Rejection region for $H_{a1}$:
+<img src="figures/h_a1.png" width="300"/>
+
+Rejection region for $H_{a2}$:
+<img src="figures/h_a2.png" width="200"/>
+
+Rejection region for $H_{a3}$:
+<img src="figures/h_a3.png" width="200"/>
+  
+* The point is that the rejection region should include values the statistic
+would take on under the alternative. But it should also be small enough so that,
+under the null, you would only accidentally reject $\alpha$% of the time.
+  
+**$p$-values**
+
+* Hypothesis testing can be very black-or-white: you either reject a hypothesis
+  or you don't.
+* $p$-values can give shades of gray. They describe the magnitude of the
+  discrepancy from the null hypothesis.
+* To compute a $p$-value, compute the area under the reference distribution that
+  is more extreme than the observed test statistic.
+  
+Example $p$-value for $H_{a2}$.
+<img src="figures/one_sided_pval.png" width="200"/>
+  
+Example $p$-value for $H_{a1}$.
+<img src="figures/two_sided_pval.png" width="200"/>
+
+**Confidence Intervals**
+
+* A confidence interval gives the set of differences $\mu_1 - \mu_2$ for which
+  you would not reject the null hypothesis.
+* They can be computed by inverting the equation that comes from setting the
+  test statistic equal to the test rejection thresholds. For example, when
+  $\sigma^2$ is known, you would use a Normal reference distribution, giving
+  equations,
+  
+$$
+\frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma} = z^{\ast}\left(\frac{\alpha}{2}\right)
+\frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma} = z^{\ast}\left(1 - \frac{\alpha}{2}\right) \\
+$$
+
+and hence the intervals,
+
+$$
+\left[\left(\bar{y}_1 - \bar{y}_2\right) - \sigma z^{\ast}\left(1 - \alpha\right), \left(\bar{y}_1 - \bar{y}_2\right) + \sigma z^{\ast}\left(1 - \alpha\right)\right].
+$$
+
+## Interpretation via Linear Regression
+
+Earlier, we assumed the model,
+
+$$
+y_{ij} = \mu_{i} + \epsilon_{ij} \\
+\epsilon_{ij} \overset{i.i.d.}{\sim} \mathcal{N}\left(0, \sigma_{j}^{2}\right),
+$$
+where $i = 1, 2$ indexed the two treatments and $j$ indexed the samples within
+each treatment.
+
+In the case that $\sigma_{1}^2 = \sigma_{2}^2 = \sigma^2$, this can be rewritten
+as,
+
+$$
+y_{i} = \beta_{0} + \beta_{1}D_{i} + \epsilon_{i} \\
+\epsilon_{i} \overset{i.i.d.}{\sim} \mathcal{N}\left(0, \sigma^{2}\right),
+$$
+
+where $i = 1, 2, \dots, n_{1}, n_{1} + 1, \dots, n_{1} + n_{2}$ indexes all
+samples, from both treatments and
+
+$$
+D_{i} = \begin{cases} 
+1 & \text{ if sample } i \text{ is from treatment 2} \\
+0 & \text{ if sample } i \text{ is from treatment 1}.
+\end{cases}
+$$
+
+In this model, the mean under treatment 1 is $\beta_{0}$, and the mean under
+treatment 2 is $\beta_{0} + \beta_{1}$. These play the role of $\mu_{1}$ and
+$\mu_{2}$ from before. If the two means are equal, then $\beta_{1} = 0$.
+
+
+<img src="figures/linear_reg.png" width="500"/>
+
+Q's: What would this look like if there were no treatment effect? What would
+this look like if $n_{1} \gg n_{2}$.
+
+## Code example
+
+# Test when sigma[1] != sigma[2]
+
+What happens if the variances in the two groups are not the same?
+
+* The variance of the difference is changed, but can still obtain a N(0, 1)
+  reference distribution with appropriate standardization,
+
+z[0] = (y[1] - y[2]) / sqrt(sigma[1]^2 / n1 + sigma[2]^2 / n2) ~ N(0, 1)
+
+* If you don't know sigma1 and sigma2, you need to estimate them. The estimator
+  is different from our previous one, and the resulting reference distribution
+  also changes,
+
+t[0] = (y[1] - ...) / (sqrt s1^2 / n1 + s2^2 / n2) ~ t(nu)
+
+where nu is the integer closest to (s1^2 / n1 + s2^2 / n2) ^ 2 / [(s1^2 / n1) ^ 2 / (n1 - 1) + (s2^2 / n2) ^ 2 / (n2 - 1)]
+
+(not an obvious derivation). It's sometimes called welch's t.
+
+recipe:
+one sided, left
+
+test rejection
+p-value
+confidence interval
+
+one sided, right
+two sided
+
+Connection to regression
+
+Model is formally equivalent to
+
+y[i] = beta0 + beta1 D1 + eps[i]
+
+where eps[i] ~ sigma1^2 for Di = 1, sigma2^2 for Di = 0.
+
+## example in R
+
+# Which test to use when?
+
+You need to check whether sigma1^2 = sigma2^2.
+
+Estimate each using s1^2 and s2^2. If they are very different from one another,
+reject this hypothesis.
+
+It turns out that the reference is available in closed form,
+
+F0 = s1^2 / s2^2 ~ F(n1 - 1, n2 - 1)
+1 / F0 ~ F(n2 - 1, n1 - 1)
+
+So we reject if F0 is too large or too small. (alpha / 2 in each test, draw picture)
+
+Can also build a confidence interval for the ratio.
+
+# Common Alternative: Paired Data
+
+What happens when you give both treatments to each experimental unit?
+These experimental units vary in ways that are irrelevant. By pairing, you are
+"blocking" out the nuisance factor.
+
+Example with shoes.
+
+Data example: tips measuring metal hardness.
+
+
+## Model setting
+
+Like before,
+
+y[i, j] = mu[i] + eps[i, j]
+
+But now, the eps[i, j] are correlated for each fixed j. You're likely to be high
+on both, or low on both.
+
+It turns out that, under the null, the statistic
+
+\bar{d} = average(y1j - y2j) / (sigmad / sqrt(n)) ~ N(0, 1)
+
+so it makes a good reference distribution.
+
+As before, from a reference distribution, we can define a hypothesis test, a
+p-value, and a confidence interval, for each of the three alternative
+hypotheses.
+
+R example
+
+* Show code and give people link to the binder
+
+[^1]: Hint: Any linear combination of Gaussians is still Gaussian, and these
+distributions are completely determined by their means and variances. Also, for
+any fixed constant $a$, if $X \sim \mathcal{N}\left(0, \tau^2\right)$, then $a X
+\sim \mathcal{N}\left(0, a^2 \tau^2\right)$.
