@@ -291,14 +291,53 @@ don't have equal strengths.
 Q: How would you test against the alternative $H_{a2}$ that the unmodified
 concrete is stronger than the modified one?
 
-# Tests assuming $\sigma^2_{1} = \sigma^2_{2}$
+# Tests assuming $\sigma^2_{1} \neq \sigma^2_{2}$
 
 What happens if the variances in the two groups are not the same?
 
-In this case, ...
+<img src="figures/different_sigmas.png" width="300"/>
 
-* The variance of the difference is changed, but can still obtain a N(0, 1)
-  reference distribution with appropriate standardization,
+Notice that, by independence within and between groups,
+
+$$
+\text{Var}\left(\bar{y}_1 - \bar{y}_2\right) &= \text{Var}\left(\bar{y}_1}\right) + \text{Var}\left(\bar{y}_2}\right) \\
+&= \frac{1}{n_1}\sigma_1^2 + \sigma{1}{n_2}\sigma_2^2.
+$$
+
+Therefore, if both $\sigma_1$ and $\sigma_2$ are known, we can obtain a
+$\mathcal{N}\left(0, 1\right)$ reference distribution by standardizing
+appropriately,
+
+$$
+Z_0 = \frac{\bar{y}_1 - \bar{y}_2}{\sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}} \sim \mathcal{N}\left(0, 1\right).
+$$
+
+If we don't know $\sigma_1$ or $\sigma_2$, then we have to estimate them. We can
+use the same estimators $s_1$ and $s_2$ as before. But this time, we don't
+attempt to pool them into $s_p$. It turns out that this leads to an alternative
+reference $t$-distribution,
+
+$$
+T_0 = \frac{\bar{y}_1 - \bar{y}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}} &\sim t\left(\nu\right)
+$$
+
+where
+
+$$
+\nu\left(\left[ \frac{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}{\frac{s_1^2}{n_1} + \frac{s_2}     \right])
+$$
+
+$$
+\left[(\frac{\left(\frac{s_1^2}{n1}\right) ^ 2}{n_1 - 1} + \frac{\left(\frac{s_2^2}{n_2}\right) ^ 2}{n_1 - 1}\right]
+$$
+
+ [(s1^2 / n1) ^ 2 / (n1 - 1) + (s2^2 / n2) ^ 2 / (n2 - 1)]
+
+In this case, we should not used the pooled standard error estimator $s_{p}^{2}$
+defined above. 
+
+In this case, the variance of the difference is changed, but can still obtain a
+$N(0, 1) reference distribution with appropriate standardization,
 
 z[0] = (y[1] - y[2]) / sqrt(sigma[1]^2 / n1 + sigma[2]^2 / n2) ~ N(0, 1)
 
