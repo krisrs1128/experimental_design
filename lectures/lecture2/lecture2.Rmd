@@ -254,11 +254,48 @@ this look like if $n_{1} \gg n_{2}$.
 
 ## Code example
 
+We'll use the `cement` dataset. The story is that you want to see whether two
+different chemical formulas lead to cement that have the same strength. First,
+let's read in the data and make a plot.
 
+```{r}
+library("readr")
+library("reshape2")
+library("ggplot2")
+theme_set(theme_bw() + theme(panel.grid = element_blank()))
 
-# Test when sigma[1] != sigma[2]
+cement <- read_csv("cement.txt")
+cement
+
+# data needs to be in "tall" format for ggplot2
+mcement <- melt(cement, variable.name = "Formula", value.name = "Strength")
+ggplot(mcement) +
+  geom_point(aes(x = Formula, y = Strength))
+```
+
+It looks like the unmodified cement is stronger. But it's easy to be tricked
+into seeing patterns which are explainable by pure randomness, so a test would
+still be worthwhile. We'll assume that the variance $\sigma^2$ is the same in
+both groups, but will still need to estimate. So, we will use a $t$-test. A
+priori, we didn't have a guess about whether one formula was stronger than the
+other, so we'll test against the two-sided alternative $H_{a1}$.
+
+```{r}
+test_result <- t.test(cement$Modified, cement$Unmodified, var.equal = TRUE, alternative="two.sided", conf.level=0.95)
+test_result
+```
+
+The result of the test suggest that there's some evidence that the formulas
+don't have equal strengths.
+
+Q: How would you test against the alternative $H_{a2}$ that the unmodified
+concrete is stronger than the modified one?
+
+# Tests assuming $\sigma^2_{1} = \sigma^2_{2}$
 
 What happens if the variances in the two groups are not the same?
+
+In this case, ...
 
 * The variance of the difference is changed, but can still obtain a N(0, 1)
   reference distribution with appropriate standardization,
