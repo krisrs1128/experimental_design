@@ -393,7 +393,6 @@ m_etch <- etch %>%
   melt(id.vars = "Specimen", variable.name = "Tip")
 m_etch$Specimen <- factor(m_etch$Specimen, order(rowMeans(etch[, -1])))
 
-
 ggplot(m_etch) +
   geom_point(aes(x = Tip, y = value)) +
   geom_line(aes(x = Tip, y = value, group = Specimen)) +
@@ -408,6 +407,14 @@ readings for both tips to those which had high readings for both. Note that the
 variation from one tip to another is smaller than the variation across the
 different sheets of metal -- if we didn't pair, the nuisance variation would
 potentially drown out interesting variation.
+
+Indeed, if you ignored the pairing information, this is how the difference
+between the two tips would look.
+
+```{r}
+ggplot(m_etch) +
+  geom_boxplot(aes(x = Tip, y = value))
+```
 
 ## Inference
 
@@ -468,6 +475,37 @@ test_result
 
 The result suggests that whatever differences we noticed between the tips could
 have been due to chance alone.
+
+Earlier, I made a general statement about true treatment effects being "drowned
+out" by nuisance variation when pairing is not used. For illustration, let's
+consider a made up dataset where there is in fact a small treatment effect, but
+the variation across experimental units would make that impossible to have
+noticed.
+
+```{r}
+mus <- c(0, 0.2)
+Sigma <- matrix(c(1, 0.9, 0.9, 1), 2)
+
+y <- MASS::mvrnorm(10, mus, Sigma)
+m_y <- melt(y, varnames = c("Specimen", "Tip")) %>%
+  mutate(
+    Specimen = factor(Specimen, levels = order(rowMeans(y))),
+    Tip = as.factor(Tip)
+  )
+
+ggplot(m_y) +
+  geom_boxplot(aes(x = Tip, y = value))
+
+ggplot(m_y) +
+  geom_point(aes(x = Tip, y = value)) +
+  geom_line(aes(x = Tip, y = value, group = Specimen)) +
+  facet_wrap(~Specimen)
+
+# much more significant when pairing than otherwise
+t.test(y[, 1], y[, 2])
+t.test(y[, 1], y[, 2], paired = TRUE)
+```
+
 
 [^1]: Hint: Any linear combination of Gaussians is still Gaussian, and these
 distributions are completely determined by their means and variances. Also, for
