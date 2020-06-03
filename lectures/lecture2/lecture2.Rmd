@@ -45,7 +45,18 @@ conclusion will stand?
 Here are all `${x}` observations,
 
 ```{r}
-# read in data
+library("readr")
+library("reshape2")
+library("ggplot2")
+theme_set(theme_bw() + theme(panel.grid = element_blank()))
+
+cement <- read_csv("cement.txt")
+cement
+
+# data needs to be in "tall" format for ggplot2
+mcement <- melt(cement, variable.name = "Formula", value.name = "Strength")
+ggplot(mcement) +
+  geom_point(aes(x = Formula, y = Strength))
 ```
 
 ## Formalization
@@ -203,7 +214,7 @@ Example $p$-value for $H_{a1}$.
   equations,
   
 $$
-\frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma} = z^{\ast}\left(\frac{\alpha}{2}\right)
+\frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma} = z^{\ast}\left(\frac{\alpha}{2}\right) \\
 \frac{\bar{y}_{1} - \bar{y}_{2}}{\sigma} = z^{\ast}\left(1 - \frac{\alpha}{2}\right) \\
 $$
 
@@ -212,6 +223,8 @@ and hence the intervals,
 $$
 \left[\left(\bar{y}_1 - \bar{y}_2\right) - \sigma z^{\ast}\left(1 - \alpha\right), \left(\bar{y}_1 - \bar{y}_2\right) + \sigma z^{\ast}\left(1 - \alpha\right)\right].
 $$
+
+Q: What is the corresponding interval when $\sigma^2$ is not known?
 
 ## Interpretation via Linear Regression
 
@@ -235,12 +248,12 @@ $$
 where $i = 1, 2, \dots, n_{1}, n_{1} + 1, \dots, n_{1} + n_{2}$ indexes all
 samples, from both treatments and
 
-$$
+\begin{equation}
 D_{i} = \begin{cases} 
 1 & \text{ if sample } i \text{ is from treatment 2} \\
 0 & \text{ if sample } i \text{ is from treatment 1}.
 \end{cases}
-$$
+\end{equation}
 
 In this model, the mean under treatment 1 is $\beta_{0}$, and the mean under
 treatment 2 is $\beta_{0} + \beta_{1}$. These play the role of $\mu_{1}$ and
@@ -254,31 +267,13 @@ this look like if $n_{1} \gg n_{2}$.
 
 ## Code example
 
-We'll use the `cement` dataset. The story is that you want to see whether two
-different chemical formulas lead to cement that have the same strength. First,
-let's read in the data and make a plot.
-
-```{r}
-library("readr")
-library("reshape2")
-library("ggplot2")
-theme_set(theme_bw() + theme(panel.grid = element_blank()))
-
-cement <- read_csv("cement.txt")
-cement
-
-# data needs to be in "tall" format for ggplot2
-mcement <- melt(cement, variable.name = "Formula", value.name = "Strength")
-ggplot(mcement) +
-  geom_point(aes(x = Formula, y = Strength))
-```
-
-It looks like the unmodified cement is stronger. But it's easy to be tricked
-into seeing patterns which are explainable by pure randomness, so a test would
-still be worthwhile. We'll assume that the variance $\sigma^2$ is the same in
-both groups, but will still need to estimate. So, we will use a $t$-test. A
-priori, we didn't have a guess about whether one formula was stronger than the
-other, so we'll test against the two-sided alternative $H_{a1}$.
+From our plot above, it looks like the unmodified cement is stronger. But it's
+easy to be tricked into seeing patterns which are explainable by pure
+randomness, so a test would still be worthwhile. We'll assume that the variance
+$\sigma^2$ is the same in both groups, but will still need to estimate. So, we
+will use a $t$-test. A priori, we didn't have a guess about whether one formula
+was stronger than the other, so we'll test against the two-sided alternative
+$H_{a1}$.
 
 ```{r}
 test_result <- t.test(cement$Modified, cement$Unmodified, var.equal = TRUE, alternative="two.sided", conf.level=0.95)
@@ -300,8 +295,8 @@ What happens if the variances in the two groups are not the same?
 Notice that, by independence within and between groups,
 
 $$
-\text{Var}\left(\bar{y}_1 - \bar{y}_2\right) &= \text{Var}\left(\bar{y}_1}\right) + \text{Var}\left(\bar{y}_2}\right) \\
-&= \frac{1}{n_1}\sigma_1^2 + \sigma{1}{n_2}\sigma_2^2.
+\text{Var}\left(\bar{y}_1 - \bar{y}_2\right) = \text{Var}\left(\bar{y}_1\right) +  \text{Var}\left(\bar{y}_2\right) \ \\
+= \frac{\sigma_1^2}{n_1} + \frac{\sigma_{2}^2}{n_2}.
 $$
 
 Therefore, if both $\sigma_1$ and $\sigma_2$ are known, we can obtain a
@@ -318,104 +313,147 @@ attempt to pool them into $s_p$. It turns out that this leads to an alternative
 reference $t$-distribution,
 
 $$
-T_0 = \frac{\bar{y}_1 - \bar{y}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}} &\sim t\left(\nu\right)
+T_0 = \frac{\bar{y}_1 - \bar{y}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}} \sim t\left(\nu\right)
 $$
 
 where
 
 $$
-\nu\left(\left[ \frac{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}{\frac{s_1^2}{n_1} + \frac{s_2}     \right])
+\nu = \text{Round}[ \frac{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}{\frac{\left(\frac{s_1^2}{n_1}\right) ^ 2}{n_1 - 1} + \frac{\left(\frac{s_2^2}{n_2}\right) ^ 2}{n_2 - 1}}\right],
 $$
 
+This is far from obvious; fortunately, most software will compute this $\nu$
+automatically in the background.
+
+With these reference distributions, we can obtain tests, $p$-values, and
+confidence intervals, similarly as above. For example, a confidence interval for
+the difference in means (when $\sigma_1^2 \neq \sigma_2^2$ and both must be
+estimated) has the form,
+
 $$
-\left[(\frac{\left(\frac{s_1^2}{n1}\right) ^ 2}{n_1 - 1} + \frac{\left(\frac{s_2^2}{n_2}\right) ^ 2}{n_1 - 1}\right]
+\left[\left(\bar{y}_1 - \bar{y}_2\right) - t^\ast\left(1 - \frac{\alpha}{2}; \nu\right)\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}, 
+\left(\bar{y}_1 - \bar{y}_2\right) - t^\ast\left(1 - \frac{\alpha}{2}; \nu\right)\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}\right]
 $$
 
- [(s1^2 / n1) ^ 2 / (n1 - 1) + (s2^2 / n2) ^ 2 / (n2 - 1)]
+## Interpretation via Linear Regression
 
-In this case, we should not used the pooled standard error estimator $s_{p}^{2}$
-defined above. 
+As in the equal variance case, we can interpret the assumed model using the
+language of regression. The only thing that changes is that the variances are no
+longer equal in each treatment group.
 
-In this case, the variance of the difference is changed, but can still obtain a
-$N(0, 1) reference distribution with appropriate standardization,
+\begin{equation}
+y_{i} = \beta_{0} + \beta_{1}D_{i} + \epsilon_{i} \\
+\epsilon_{i} \overset{\text{indep}}{\sim} \begin{cases}
+\mathcal{N}\left(0, \sigma_1^{2}\right) & \text{ when } D_i = 0 \\
+\mathcal{N}\left(0, \sigma_2^{2}\right) & \text{ when } D_i = 1,
+\end{cases}.
+\end{equation}
 
-z[0] = (y[1] - y[2]) / sqrt(sigma[1]^2 / n1 + sigma[2]^2 / n2) ~ N(0, 1)
+## Code Example
 
-* If you don't know sigma1 and sigma2, you need to estimate them. The estimator
-  is different from our previous one, and the resulting reference distribution
-  also changes,
+To implement the test when variances are not equal, we simply need to set the
+`var.equal` parameter to `FALSE`. The estimators and degrees of freedom are
+calculated in the background.
 
-t[0] = (y[1] - ...) / (sqrt s1^2 / n1 + s2^2 / n2) ~ t(nu)
+```{r}
+test_result <- t.test(cement$Modified, cement$Unmodified, var.equal = FALSE, alternative="two.sided", conf.level=0.95)
+test_result
+```
 
-where nu is the integer closest to (s1^2 / n1 + s2^2 / n2) ^ 2 / [(s1^2 / n1) ^ 2 / (n1 - 1) + (s2^2 / n2) ^ 2 / (n2 - 1)]
+# Paired Data: A first look at blocking
 
-(not an obvious derivation). It's sometimes called welch's t.
+Sometimes, there is variation in our experimental units that isn't coming from
+our treatments, and which can make it harder to recognize real treatment
+effects. This type of variation is called _nuisance_ variation. This was the
+case in the shoes example from the first lecture: a lot of the variation in the
+wear of the shoes came from some people walking more than others, not
+necessarily the type of shoe sole used.
 
-recipe:
-one sided, left
+One common solution is to use pairing. The idea is to give both treatments to
+each experimental unit. Then, even if the experimental units vary substantially,
+you might be able to recognize changes within each unit. By pairing, you are
+"blocking out" the nuisance variation experimental experimental units.
 
-test rejection
-p-value
-confidence interval
+Our running example will be a study on the hardness of etching tips. There are
+two types of tips (two treatments), and we want to know whether they have equal
+hardness. The usual test for this requires etching into a sheet of metal (called
+a metal specimen). However, it sometimes happens that certain sheets are harder
+to etch into than others -- this is nuisance variation between sheets.
 
-one sided, right
-two sided
+To bypass this nuisance variation, the idea is to test both tips on each of the
+metal sheets. The difference in etching ability per sheet will tell us about the
+relative hardness of the tips. Here is the data,
 
-Connection to regression
+```{r}
+etch <- read_csv("etch.txt")
 
-Model is formally equivalent to
-
-y[i] = beta0 + beta1 D1 + eps[i]
-
-where eps[i] ~ sigma1^2 for Di = 1, sigma2^2 for Di = 0.
-
-## example in R
-
-# Which test to use when?
-
-You need to check whether sigma1^2 = sigma2^2.
-
-Estimate each using s1^2 and s2^2. If they are very different from one another,
-reject this hypothesis.
-
-It turns out that the reference is available in closed form,
-
-F0 = s1^2 / s2^2 ~ F(n1 - 1, n2 - 1)
-1 / F0 ~ F(n2 - 1, n1 - 1)
-
-So we reject if F0 is too large or too small. (alpha / 2 in each test, draw picture)
-
-Can also build a confidence interval for the ratio.
-
-# Common Alternative: Paired Data
-
-What happens when you give both treatments to each experimental unit?
-These experimental units vary in ways that are irrelevant. By pairing, you are
-"blocking" out the nuisance factor.
-
-Example with shoes.
-
-Data example: tips measuring metal hardness.
+m_etch <- etch %>%
+  melt(id.vars = "Specimen", variable.name = "Tip")
+m_etch$Specimen <- factor(m_etch$Specimen, order(rowMeans(etch[, -1])))
 
 
-## Model setting
+ggplot(m_etch) +
+  geom_point(aes(x = Tip, y = value)) +
+  geom_line(aes(x = Tip, y = value, group = Specimen)) +
+  facet_wrap(~Specimen)
+```
 
-Like before,
+Each panel in the plot is one metal specimen. The reading for Tip 1 is given on
+the left of each line segment, that for Tip 2 is on the right. Upward sloping
+lines are those where Tip 2 is stronger than Tip 1, and vice versa for the
+downwards sloping lines. The specimens are sorted from those which had low
+readings for both tips to those which had high readings for both. Note that the
+variation from one tip to another is smaller than the variation across the
+different sheets of metal -- if we didn't pair, the nuisance variation would
+potentially drown out interesting variation.
 
-y[i, j] = mu[i] + eps[i, j]
+## Inference
 
-But now, the eps[i, j] are correlated for each fixed j. You're likely to be high
-on both, or low on both.
+To perform inference, we'll want a data generating mechanism in the paired data
+case. The crucial change is that the errors are no longer independent within a
+batch. For example, the correlation between errors means that if a specimen has
+a lower reading for one tip, then it is likely to have a lower reading for the
+other tip as well.
 
-It turns out that, under the null, the statistic
+Formally, we suppose,
 
-\bar{d} = average(y1j - y2j) / (sigmad / sqrt(n)) ~ N(0, 1)
+$$
+y_{ij} = \mu_{i} + \epsilon_{ij} \\
+\epsilon_{i} \overset{i.i.d.}{\sim} \mathcal{N}\left(\begin{pmatrix}0 \\ 0\end{pmatrix}, \begin{pmatrix} \sigma_1^2 & \rho\sigma_1\sigma_2 \\ \rho\sigma_1\sigma_2 & \sigma_2^2 \end{pmatrix}\right).
+$$
 
-so it makes a good reference distribution.
+Let's define a statistic that averages the pairwise differences,
 
-As before, from a reference distribution, we can define a hypothesis test, a
-p-value, and a confidence interval, for each of the three alternative
-hypotheses.
+\begin{equation}
+\bar{d} := \frac{1}{n}\sum_{i = 1}^{n} \left(y_{i1} - y_{i2}\right).
+\end{equation}
+
+Intuitively, when $\left| \bar{d}\right|$ is large, we will reject the null. To
+get a sense of how large is large, we'll want a reference distribution. To this
+end, notice that
+
+\begin{equation}
+\text{Var}\left(y_{i1} - y_{i2}\right) &= \text{Var}\left(y_{i1}\right) + \text{Var}\left(y_{i2}\right) - 2\text{Cov}\left(y_{i1}, y_{i2}\right) \\
+&= \sigma_1^2 + \sigma_2^2 - 2\rho\sigma_1\sigma_2.
+\end{equation}
+
+So, if $\sigma_1, \sigma_2$ and $\rho$ are all known, then under the null hypothesis,
+\begin{equation}
+\frac{\bar{d}}{\sqrt{\frac{\sigma_1^2 + \sigma_2^2 - 2\rho\sigma_1\sigma_2}{n}}} &\sim \mathcal{N}\left(0, 1\right),
+\end{equation}
+
+and so we can use a standard normal as the reference for all testing,
+$p$-values, and confidence intervals.
+
+When the variance and covariances are unknown, we have to estimate them. Once we
+plug-in these estimates into our test statistic, the resulting reference
+distribution is a $t$-distribution, though the degrees of freedom have changed
+from before,
+
+\begin{equation}
+\frac{\bar{d}}{\sqrt{\frac{s_1^2 + s_2^2 - 2s_{12}}{n}}} &\sim t\left(n - 1\right).
+\end{equation}
+
 
 R example
 
