@@ -1,0 +1,48 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library("readr")
+library("reshape2")
+library("ggplot2")
+tips <- read_csv("https://uwmadison.box.com/shared/static/019942385a4ratngqqja280u68apdbvh.txt")
+tips
+```
+
+```{r}
+tips$Specimen <- as.factor(tips$Specimen)
+mtips <- melt(tips, id.vars = "Specimen", variable.name = "tip")
+mtips
+```
+
+```{r}
+theme_set(theme_bw())
+ggplot() +
+  geom_point(data = mtips, aes(x = tip, y = value)) +
+  geom_segment(data = tips, aes(x = "Tip1", xend = "Tip2", y = Tip1, yend = Tip2))
+```
+
+
+```{r}
+t.test(tips$Tip1, tips$Tip2, paired = TRUE)
+```
+```{r}
+fit <- lm(I(Tip1 - Tip2) ~ 1, data = tips)
+summary(fit)
+```
+
+```{r}
+tips$Tip1 <- c(7,3,3,4,8,3,2,9,5,4)
+tips$Tip2 <- c(6,2,2,3,8,2,3,9,4,3)
+mtips <- melt(tips, id.vars = "Specimen", variable.name = "tip")
+ggplot() +
+  geom_point(data = mtips, aes(x = tip, y = value)) +
+  geom_segment(data = tips, aes(x = "Tip1", xend = "Tip2", y = Tip1, yend = Tip2))
+```
+
+```{r}
+t.test(tips$Tip1, tips$Tip2, paired = FALSE)
+t.test(tips$Tip1, tips$Tip2, paired = TRUE)
+```

@@ -1,0 +1,139 @@
+---
+title: "STAT 424 HW2"
+subtitle: Fall 2020
+output:
+  pdf_document: default
+  word_document: default
+---
+
+## Instructions
+
+1. Submit your solution on Canvas as a pdf file before *September 25 at 11:59pm*.
+2. Use R for all computation, and include your code. 
+3. We recommend you start with the template `hw2.Rmd` file on Canvas.
+
+## Rubric
+
+* [30 points] One problem below will be graded for,
+  - [15 points] Correctness. Are all parts answered correctly?
+  - [15 points] Clarity. Are all answers justified? For questions with a coding
+  component, is code provided, and is it readable?
+* [20 = 4 * 5 points] Four problems below will be graded on completeness.
+* Total: 50 points
+
+```{r setup, include=FALSE}
+library("tibble")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problems
+
+**1. [DM 2.17, modified]** The viscosity of a liquid detergent is supposed to average 800
+centistokes^[Whatever that means.] at 25&deg;. A random sample of 14 batches of
+detergent is collected, and the average viscosity is 819. Suppose that we know
+that the standard deviation of viscosity is $\sigma = 24$ centistokes.
+
+  a. State the hypothesis that should be tested.
+  b. Draw a picture summarizing the data in the problem. 
+  b. Test these hypotheses using $\alpha = 0.05$. What are your conclusions?
+  c. What is the $p$-value for the test?
+  d. Find a 95\% confidence interval for the mean.
+
+**2. [DM 2.27]** Photoresist is a light sensitive material applied to semiconductor
+wafers so that the circuit pattern can be imaged onto the wafer. After
+application, the coated wafers are baked to remove the solvent in the
+photoresist mixture and to harden the resist. Here are measurements of the
+photoresist thickness (in kA) for eight wafers baked at two different
+temperatures. Assume that all of the runs were made in random order.
+
+```{r}
+photoresist <- tibble(
+  "sample_id" = as.factor(seq(8)),
+  "95" = c(11.156, 7.089, 8.097, 11.539, 11.291, 10.799, 6.467, 8.315),
+  "100" = c(5.261, 6.748, 7.461, 7.015, 8.133, 7.438, 3.772, 7.964),
+)
+```
+
+  a. Is there evidence to support the claim that the higher baking temperature
+  results in wafers with a lower mean photoresist thickness? Use $\alpha = 0.05$.
+  b. What is the $p$-value for the test conducted in part (a)?
+  c. Find a 95\% confidence interval on the difference in means. Provide a
+  practical interpretation of this interval.
+  d. Make a visualization to assist in interpreting the results from this
+  experiment.
+  e. Check the assumption of normality of the photoresist thickness.
+  f. Find the power of this test for detecting an actual difference in means of 2.5 kA.
+  g. What sample size would be necessary to detect an actual difference in means
+  of 1.5kA with a power of at least 0.9?
+
+**3. [DM 3.26, modified]** Four chemists are asked to determine teh percentage of
+methyl alcohol in a certain chemical compound. Each chemist makes three
+determinations, and the results are the following:
+
+```{r}
+chemists <- tibble(
+  chemist = c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4),
+  ma = c(84.89, 84.24, 84.18, 85.15, 85.13, 84.88, 84.79, 84.48, 85.16, 84.20, 
+         84.10, 84.55)
+)
+```
+
+  a. Make a plot describing the measurements from the four chemists. Describe
+  what you see.
+  b. Do the chemists differ significantly? Use $\alpha = 0.05$.
+  c. Analyze the residuals from this experiment.
+  d. If chemist 2 is a new employee, construct a meaningful set of orthogonal
+  contrasts that might have been useful at the start of hte experiment.
+  
+**4. [EDMES 1.8]** The computer science department of a university wishes to test
+whether there are differences among three programming texts with respect to how
+long it takes a student completing the text to write a program in C++ language.
+Eight students from an introductory class were randomly assigned each of the
+texts, asked to complete the steps outlined in the text, and then given a
+program to write. The results, in minutes, are shown below.  Conduct a
+one-factor ANOVA to determine if hte texts are equally effective.
+
+
+```{r}
+books <- tibble(
+ book_id = c(rep("1", 8), rep("2", 8), rep("3", 8)),
+ minutes = c(11, 9, 12, 13, 15, 12, 13, 12, 14, 12, 14, 13, 15, 15, 14, 16, 12, 
+             8, 10, 12, 13, 10, 14, 11)
+)
+```
+
+**5. [DM 3.23]** The response time in millisceonds was determined for three
+different types of circuits that could be used in an automatic valve shutoff
+mechanism^[Sounds important, probably should pay attention.]. The results from a
+completely randomized experiment are shown in the following table.
+
+```{r}
+shutoff <- tibble(
+  "1" = c(9, 12, 10, 9, 14),
+  "2" = c(20, 22, 23, 17, 30),
+  "3" = c(6, 5, 7, 16, 7)
+)
+```
+
+  a. Plot the data. You may find it useful to reshape the data into tidy
+  format.
+  b. Test the hypothesis that the three circuit types have the same response
+  time. Use $\alpha = 0.01$.
+  c. Use Tukey's test to compare pairs of treatment means. Use $\alpha = 0.01$.
+  d. Overlay a 95\% confidence interval for the group means on the plot that you
+  made in part (a).
+
+## Feedback
+
+a. How much time did you spend on this homework?
+b. Which problem did you find most valuable?
+
+## References
+
+[DAE] Montgomery, Douglas C. Design and analysis of experiments. John wiley &
+sons, 2017.
+
+[EDMES] Berger, P. D., & Maurer, R. E. (2002). Experimental Design with
+Application in Management, Engineering, and the Sciences. CA (USA): Wadsworth
+Group Belmont. Accessed for free at
+https://search.library.wisc.edu/catalog/991013677228502128.

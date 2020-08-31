@@ -1,0 +1,19 @@
+
+```{r}
+
+simulate_data <- function(true_means, n, sigma=1) {
+  X <- matrix(nrow = n, ncol = length(true_means))
+  for (i in seq_len(n)) {
+    X[i, ] <- rnorm(length(true_means), true_means, sigma)
+  }
+
+  melt(X, varnames = c("index", "group"))
+}
+
+runs <- list()
+for (i in seq_len(100)) {
+  runs[[i]] <- simulate_data(c(0, 0, 0), 10)
+}
+
+
+```

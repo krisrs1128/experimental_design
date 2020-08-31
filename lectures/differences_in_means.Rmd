@@ -1,0 +1,58 @@
+---
+title: "Difference in Means"
+output: html_notebook
+---
+
+We'll download the cement data that's described in section 2.4.
+
+```{r}
+library("broom")
+library("ggplot2")
+library("readr")
+library("reshape2")
+cement <- read_csv("https://uwmadison.box.com/shared/static/sjpn7dmlvcyp5wvo9orn8euuk24yvkq9.txt")
+cement
+```
+
+For visualization, it's going to be better to have the data in "tall" or "tidy"
+format.
+
+```{r}
+mcement <- melt(cement, measure.vars = c("Modified", "Unmodified"), variable.name = "formulation", value.name = "strength")
+head(mcement)
+```
+
+```{r}
+theme_set(theme_bw())
+ggplot(mcement) +
+  geom_point(aes(x = formulation, y = strength))
+```
+
+Now that we've made a preliminary exploratory view, let's run a t-test. The 
+null hypothesis is that there's no difference in the average strength of the 
+modified and unmodified cements.
+
+```{r}
+t_result <- t.test(cement$Modified, cement$Unmodified, var.equal = TRUE)
+t_result
+```
+
+We might want a simple way to extract different statistics from the t-test
+result. This is made easier through the `tidy` function in the `broom` package.
+
+```{r}
+tidy(t_result)
+```
+
+It turns out that the $t$-test result is equivalent to running a linear
+regression with just one predictor.
+
+```{r}
+fit <- lm(strength ~ formulation, data = mcement)
+summary(fit)
+```
+
+
+```{r}
+t.test(cement$Modified, cement$Unmodified, var.equal = FALSE)
+```

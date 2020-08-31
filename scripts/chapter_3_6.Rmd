@@ -1,0 +1,54 @@
+
+```{r}
+etch <- data.frame(
+  power = rep(c("160", "180", "200", "220"), 5),
+  ix = rep(1:5, each=4 ),
+  value = c(575, 565, 600, 725, 542, 593, 651, 700, 530, 590, 610, 715, 539, 579, 637, 685, 570, 610, 629, 710)
+)
+```
+
+```{r}
+plot(etch$power, etch$value)
+
+# more flexible plots
+library("ggplot2")
+ggplot(etch) +
+  geom_point(aes(x = power, y = value))
+```
+
+
+```{r}
+fit <- lm(value ~ power, data = etch)
+anova_tab <- anova(raw_fit)
+anova_tab
+```
+
+```{r}
+plot(etch$value, predict(fit), asp = 1)
+abline(0, 1)
+```
+
+```{r}
+hist(resid(fit))
+plot(predict(fit), resid(fit), asp = 1)
+```
+
+```{r}
+mean_se <- summary(fit)$sigma / sqrt(5) # why the 5?
+
+fit_data <- coef(fit)
+fit_data
+fit_data[-1] <- fit_data[1] + fit_data[-1]
+
+fit_data <- data.frame(
+  power = c("160", "180", "200", "220"),
+  y_hat = fit_data,
+  y_lower = fit_data + qt(0.025, 16) * mean_se, # why the 16? (hint: page 67)
+  y_upper = fit_data + qt(0.975, 16) * mean_se
+)
+
+ggplot(fit_data) +
+  geom_point(aes(x = power, y = y_hat), col = "#689196", size = 4) +
+  geom_errorbar(aes(x = power, y = y_hat, ymin = y_lower, ymax = y_upper), col = "#689196") +
+  geom_point(data = etch, aes(x = power, y = value))
+```

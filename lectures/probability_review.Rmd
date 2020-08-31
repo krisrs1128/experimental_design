@@ -1,0 +1,77 @@
+---
+title: "Probability Review and Sampling Distributions"
+output: html_notebook
+---
+
+# Central Limit Theorem
+
+Let's see what happens when you average Gamma distributed variables.  For any
+given sample, the histogram is very far from normal.The mean is highlighted in
+red.
+
+```{r}
+x <- rgamma(1000, 1, 2)
+hist(x, 100)
+abline(v = mean(x), col = "red")
+abline(v = 0.5, col = "orange")
+```
+
+
+What if we take the means of many samples?
+
+```{r}
+n <- 1e3
+n_sim <- 1e4
+means <- vector(length = n_sim)
+for (i in seq_len(n_sim)) {
+  means[[i]] <- mean(rgamma(n, 1, 2))
+}
+
+hist(sqrt(n) * (means - 0.5) / 0.5, col = "red", 50)
+```
+
+So even though we started with a very non-Gaussian density, we end up with something that looks like a Gaussian, after standardizing and rescaling by $\sqrt{n}$.
+
+Exercise: Decrease n (to say, 3 - 5), and see how the approximation quality
+decreases. About how many samples do you need before the central limit theorem
+starts to a good approximation?
+
+# Chi-Square Distribution
+
+Let's check that the sum of squares of gaussians is really chi-square.
+
+```{r}
+z <- matrix(rnorm(5e3 * 5), 5e3, 5)
+z2 <- rowSums(z ^ 2)
+hist(z2, 50, freq=FALSE)
+x_grid <- seq(0, 20, 0.1)
+lines(x_grid, dchisq(x_grid, 5), col = "red")
+```
+What about when we subtract the mean?
+
+```{r}
+z <- matrix(rnorm(5e3 * 5), 5e3, 5)
+z2 <- rowSums((z - rowMeans(z)) ^ 2)
+hist(z2, 50, freq = FALSE)
+lines(x_grid, dchisq(x_grid, 5), col = "red")
+lines(x_grid, dchisq(x_grid, 4), col = "blue")
+```
+
+# t-Distribution
+
+We said that when we standardize the mean and use a plugin estimate for the variance, we get a t-distribution. Let's check that.
+
+```{r}
+y <- matrix(rnorm(5e3 * 5), 5e3, 5)
+y_std <- sqrt(5) * rowMeans(y) / apply(y, 1, sd)
+hist(y_std, 50, freq = FALSE)
+x_grid <- seq(-5, 5, 0.1)
+lines(x_grid, dt(x_grid, 4), col = "red")
+lines(x_grid, dnorm(x_grid), col = "blue") # uncomment to see how off the normal is
+```
+
+
+
+
+
+

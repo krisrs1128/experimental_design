@@ -1,0 +1,54 @@
+---
+title: "Nonparametric ANOVA"
+output: html_notebook
+---
+
+Let's generate a dataset where means are equal across all the groups. They'll be
+generated from gamma distributions (normality does not hold).
+
+```{r}
+library("reshape2")
+library("ggplot2")
+```
+
+```{r}
+simulate_null <- function(a, n, alpha) {
+  alphas <- rep(alpha, a)
+  x_list <- list()
+  for (i in seq_len(a)) {
+    x_list[[i]] <- rgamma(n, alphas[[i]], alpha)
+  }
+  melt(x_list)
+}
+```
+
+```{r}
+x <- simulate_null(6, 50, 5)
+ggplot(x) +
+  geom_jitter(aes(x = L1, y = value), width=0.2)
+```
+There's no difference between these groups. Let's compute the nonparametric ANOVA statistic.
+
+```{r}
+kruskal.test(x$value, x$L1)$statistic
+```
+
+Let's pretend we didn't know about the theory for the reference distribution of this statistic. Let's simulate from the null many times, and see what the histogram looks like.
+
+```{r}
+sim_length <- 1000
+stats <- rep(NA, ength = sim_length)
+
+for (b in seq_len(sim_length)) {
+  x <- simulate_null(6, 50, 5)
+  stats[b] <- kruskal.test(x$value, x$L1)$statistic
+  
+  if (b %% 50 == 0) {
+    p <- ggplot(data.frame(kw = stats)) +
+      geom_histogram(aes(x = kw), bins=20)
+    print(p)
+  }
+}
+```
+
+
