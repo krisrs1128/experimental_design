@@ -1,0 +1,136 @@
+---
+title: "ANOVA"
+output: html_notebook
+---
+
+First, let's download and visualize a dataset for ANOVA.
+
+```{r}
+library("readr")
+library("reshape2")
+library("dplyr")
+library("broom")
+library("ggplot2")
+theme_set(theme_bw())
+```
+
+```{r}
+etch <- read_csv("https://uwmadison.box.com/shared/static/3ltmo89ea0xowsh1386x9fk58qc51ned.txt")
+etch$Power <- as.factor(etch$Power)
+etch
+```
+
+```{r}
+m_etch <- etch %>%
+  melt(id.vars = "Power", value.name = "etch_rate") %>%
+  arrange(Power)
+ggplot(m_etch) +
+  geom_point( aes(x = Power, y = etch_rate))
+```
+
+```{r}
+# anova table
+fit <- lm(etch_rate ~ Power, data = m_etch)
+anova(fit)
+```
+
+For the record, we can get confidence intervals from these `lm` fits, without
+doing anything by hand.
+
+```{r}
+power_levels <- m_etch %>%
+  select(Power) %>%
+  unique()
+predict(fit, newdata = power_levels, interval = "confidence")
+```
+
+
+Just so we don't think that the `anova` function is doing anything too
+mysterious, let's check the sum of squares calculations by hand. First, we'll
+check the between sum of squares (difference between each group's mean and the
+overall mean), this is the value that's large when the null isn't true.
+
+```{r}
+between_sums <- m_etch %>%
+  group_by(Power) %>%
+  summarise(means = mean(etch_rate))
+between_sums # can see each group's mean
+5 * sum((between_sums$means - mean(m_etch$etch_rate)) ^ 2) # SST
+```
+
+Now, let's compute the within sum of squares. This gives a point of reference,
+to see whether SST is really that big.
+
+```{r}
+within_sums <- m_etch %>%
+  group_by(Power) %>%
+  mutate(diff2 = (etch_rate - mean(etch_rate)) ^ 2)
+within_sums # can see each sample's square diff from mean
+sum(within_sums$diff2) # SSE
+```
+
+We can also check the mean squares and test statistic calculations. Note the use
+of the `tidy` function -- this is from the `broom` package, and converts model
+outputs into easier to work with data frames.
+
+```{r}
+aov_fit <- tidy(anova(fit))
+aov_fit$sumsq[1] / aov_fit$df[1] # mean sq
+aov_fit$meansq[1] / aov_fit$meansq[2] # f-statistic
+pf(aov_fit$statistic[1], aov_fit$df[1], aov_fit$df[2], lower.tail = FALSE) # hand calculate p-value
+```
+
+## Diagnostics
+
+Let's check whether there are any systematic biases that we can recognize, from
+the patterns of the residuals.
+
+```{r}
+m_etch <- m_etch %>%
+  mutate(resid =  m_etch$etch_rate - predict(fit))
+ggplot(m_etch) +
+  geom_point( aes(x = Power, y = resid) )
+```
+
+Let's also check normality of the residuals.
+
+```{r}
+ggplot(m_etch) +
+  geom_histogram(aes(x = resid), bins=10)
+
+qqnorm(m_etch$resid)
+qqline(m_etch$resid, col = "red")
+```
+
+
+# Transformations
+
+We'll show how you can transform a Poisson variable, so that it is less skewed.
+
+```{r}
+x <- rpois(4000, 5)
+x <- data.frame(x)
+
+ggplot(x) +
+  geom_histogram(aes(x = x), binwidth = 0.5)
+
+ggplot(x) +
+  geom_histogram(aes(x = sqrt(1 + x)), binwidth = 0.1)
+```
+
+In practice, it's not uncommon to see lognormally distributed data. These data
+have peaks near zero, and then gradually decay after. Taking the log transforms
+them into normally distributed data.
+
+```{r}
+x <- exp(matrix(rnorm(5e3 * 2), 5e3, 2))
+x <- data.frame(x)
+
+ggplot(x) +
+  geom_point(aes(x = X1, y = X2), alpha = 0.2)
+
+ggplot(x) +
+  geom_point(aes(x = X1, y = X2), alpha = 0.2) +
+  scale_x_log10() +
+  scale_y_log10()
+```

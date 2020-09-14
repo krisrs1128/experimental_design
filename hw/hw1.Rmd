@@ -28,24 +28,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Problems
 
-**1. [DAE 1.3]** Suppose that you want to compare the growth of garden flowers with
-different conditions of sunlight, water, fertilizer, and soil conditions.
+**1. [DAE 1.3]** Suppose that you want to compare the growth of garden flowers
+with different conditions of sunlight, water, fertilizer, and soil conditions.
 Complete steps 1 - 3 of the guidelines for designing experiments in Section 1.4.
+This is an open-ended question -- there is no one right answer -- just explain
+your thought process.
 
 **2. [DAE 1.8 / MED 1.5]**
-    a. What is replication? Why do we need replication in an
-    experiment? 
-    b. Present an example that illustrates the difference between
-    replication and repeated measurements. 
-    c. State whether or not replication in your example would have any
-    nonstatistical disadvantages, such as a considerable increase in the cost of
-    running the experiment.
+
+  a. What is replication? Why do we need replication in an
+  experiment? 
+  b. Present an example that illustrates the difference between
+  replication and repeated measurements. 
+  c. State whether or not replication in your example would have any
+  nonstatistical disadvantages, such as a considerable increase in the cost of
+  running the experiment.
 
 **3. [DAE 1.9, modified]**
-    a. Why is randomization important in an experiment? 
-    b. Give one example where complete randomization would be difficult or
-    unethical^[The field of observational causal inference exists for drawing
-    conclusions in this case, but it is out of scope for our class.].
+
+  a. Why is randomization important in an experiment? 
+  b. Give one example where complete randomization would be difficult or
+  unethical^[The field of observational causal inference exists for drawing
+  conclusions in this case, but it is out of scope for our class.].
 
 **4. [MED, 1.4, modified]** An experiment with a single factor and two levels, 1 and
 2, was used, and the results were as follows:
@@ -67,10 +71,10 @@ df <- tibble(
   c. What does part (b) tell you about the need for blocking? Is it needed -- why
   or why not?
     
-**5. [MED 1.15]** Assume that an experiment with four levels of a single factor was
-run, with randomization, and the value of the response variable was almost
-strictly increasing during the runs of the experiment. What would you suspect
-and what would be your recommendation?
+**5. [MED 1.15]** Assume that an experiment with four levels of a single factor
+was run, and the value of the response variable was almost strictly increasing
+during the runs of the experiment. What would you suspect and what would be your
+recommendation?
 
 ## Feedback
 
@@ -81,7 +85,7 @@ b. Which problem did you find most valuable?
 
 ## References
 
-[DAE] Montgomery, Douglas C. Design and analysis of experiments. John wiley &
+[DAE] Montgomery, Douglas C. Design and analysis of experiments. John Wiley &
 sons, 2017.
 
 [MED] Ryan, Thomas P. Modern experimental design. Hoboken, N.J:

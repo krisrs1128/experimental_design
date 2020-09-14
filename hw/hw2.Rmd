@@ -28,10 +28,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Problems
 
-**1. [DM 2.17, modified]** The viscosity of a liquid detergent is supposed to average 800
-centistokes^[Whatever that means.] at 25&deg;. A random sample of 14 batches of
-detergent is collected, and the average viscosity is 819. Suppose that we know
-that the standard deviation of viscosity is $\sigma = 24$ centistokes.
+**1. [DM 2.17, modified]** The viscosity of a liquid detergent is supposed to
+average 800 centistokes^[Whatever that means.] at 25&deg;. A random sample of 14
+batches of detergent is collected, and the average viscosity is 819. Suppose
+that we know that viscosity is normally distributed and has a standard deviation
+of $\sigma = 24$ centistokes.
 
   a. State the hypothesis that should be tested.
   b. Draw a picture summarizing the data in the problem. 
@@ -66,7 +67,7 @@ photoresist <- tibble(
   g. What sample size would be necessary to detect an actual difference in means
   of 1.5kA with a power of at least 0.9?
 
-**3. [DM 3.26, modified]** Four chemists are asked to determine teh percentage of
+**3. [DM 3.26, modified]** Four chemists are asked to determine the percentage of
 methyl alcohol in a certain chemical compound. Each chemist makes three
 determinations, and the results are the following:
 
