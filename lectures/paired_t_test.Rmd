@@ -1,0 +1,35 @@
+---
+title: "Paired t-test"
+output: html_notebook
+---
+
+```{R}
+library("readr")
+library("ggplot2")
+library("reshape2")
+```
+
+```{r}
+tips <- read_csv("https://uwmadison.box.com/shared/static/019942385a4ratngqqja280u68apdbvh.txt")
+
+tips$Tip1 <- c(7,3,3,4,8,3,2,9,5,4) # example to show power changes
+tips$Tip2 <- c(6,2,2,3,8,2,3,9,4,3)
+```
+
+```{r}
+tips$Tip1 <- tips$Tip1 + runif(nrow(tips), -0.1, 0.1) # add a bit of jitter
+tips$Tip2 <- tips$Tip2 + runif(nrow(tips), -0.1, 0.1)
+
+mtips <- melt(tips, id = "Specimen")
+ggplot() +
+  geom_point(data = mtips, aes(x = variable, y = value)) +
+  geom_segment(data = tips, aes(x = "Tip1", xend = "Tip2", y = Tip1, yend = Tip2, col = Tip1 > Tip2))
+```
+
+```{r}
+t.test(tips$Tip1, tips$Tip2)
+```
+
+```{r}
+t.test(tips$Tip1, tips$Tip2, paired = TRUE)
+```

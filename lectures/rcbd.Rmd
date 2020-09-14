@@ -1,0 +1,85 @@
+---
+title: "Randomized Complete Block Designs"
+output: html_notebook
+---
+
+Let's load some libraries.
+
+```{r}
+library("DescTools")
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+We'll download the vascular graft data, in which we wanted to study the effect
+of pressure on yield, but controlling for possible batch effects.
+
+```{r}
+graft <- read_table2("https://uwmadison.box.com/shared/static/0ciblk4z2f3k6zizbj4plg3q33w1d0n6.txt") %>%
+  melt(id.vars = "Pressure", variable.name = "batch", value.name = "yield") %>%
+  mutate(Pressure = as.factor(Pressure))
+```
+
+Before doing any analysis, let's make some plots to see if there was any strong
+batch effect. We can also make a first pass at whether pressure might be related
+to yield in any detectable way.
+
+```{r}
+ggplot(graft) +
+  geom_point( aes(x = batch, y = yield, col = Pressure)) +
+  scale_color_brewer(palette = "Set2")
+
+ggplot(graft) +
+  geom_text( aes(x = Pressure, y = yield, col = Pressure, label = batch)) +
+  scale_color_brewer(palette = "Set2")
+```
+Now, let's quantify the relationship between pressure and yield, controlling for
+additive batch effects.
+
+```{r}
+fit <- lm(yield ~ Pressure + batch, graft)
+summary(fit)
+```
+
+Compare the ANOVA table, confidence intervals, and point predictions from below with the output of Figure 4.2.
+
+```{r}
+anova(fit)
+confint(fit)
+predict(fit)
+```
+
+To check the additivity assumption, let's plot the residuals against the batch.
+It seems mostly okay (no strong patterns in residuals across batches), except
+possibly for batch 6. The residuals there seem too narrow, and it might be worth
+following-up with whoever ran the experiments on that batch.
+
+```{r}
+resids <- resid(fit)
+qqnorm(resids)
+qqline(resids, col = "red")
+
+graft <- graft %>%
+  mutate(resid = resids)
+
+ggplot(graft) +
+  geom_point(aes(x = batch, y = resid, col = Pressure))
+```
+
+If we want, we can also search for some interesting contrasts (correcting for
+multiple comparisons), using the same functions as in the multiple comparisons
+videos.
+
+```{r}
+contrasts <- matrix(
+  c(1, 1, -1, -1,
+    1, 0, 0, -1),
+  nrow = 2, byrow=TRUE
+)
+
+PostHocTest(aov(fit), method = "scheffe", contrasts = t(contrasts)) # scheffe's method
+TukeyHSD(aov(fit))  # tukey's test
+``` 

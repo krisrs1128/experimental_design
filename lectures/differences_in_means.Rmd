@@ -52,7 +52,6 @@ fit <- lm(strength ~ formulation, data = mcement)
 summary(fit)
 ```
 
-
 ```{r}
 t.test(cement$Modified, cement$Unmodified, var.equal = FALSE)
 ```

@@ -1,0 +1,109 @@
+---
+title: "Random Effects ANOVA"
+output: html_notebook
+---
+
+```{r}
+library("broom")
+library("dplyr")
+library("ggplot2")
+library("lme4")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+Let's download and reshape the Loom data. In this experiment, four looms have
+been selected at random from a factory floor, to see whether the looms might be
+contributing to the variation in strength that we observe in the data.
+
+```{r}
+loom_wide <- read_table2("https://uwmadison.box.com/shared/static/7uqhn150ldw5osplsf6yyyxkkmboib3q.txt")
+loom_wide$Loom <- as.factor(loom_wide$Loom)
+loom <- melt(loom_wide, variable.name = "sample", value.name = "strength", id.vars = "Loom")
+```
+
+It's always useful to plot the data, to get a first sense of what the results
+might look like. It's already seeming like there's a pretty substantial
+loom-to-loom effect. Our job now is to quantify it, using a random effects
+model.
+
+```{r}
+ggplot(loom) +
+  geom_point(aes(x = Loom, y = strength))
+```
+
+# Method of Moments
+
+For the methods of moments, we needs to plug statistics into the formulas for
+estimating $\sigma^2$ and $\sigma^2_{\tau}$. As a first step, let's obtain
+several of the statistics we may want downstream, using an anova table^[Note
+that this `p.value` is not what we are looking for, since it only refers to
+these 4 specific looms, and not the entire population of looms on the factory
+floor.]
+
+```{r}
+aov_table <- lm(strength ~ Loom, data = loom) %>%
+  aov() %>%
+  tidy()
+aov_table
+```
+
+Let's define variables for the number of samples, number of looms, and number of
+samples per loom, respectively.
+
+```{r}
+N <- nrow(loom)
+a <- nlevels(loom$Loom)
+n <- N / a
+```
+
+Now, we can compute estimates for $\sigma^2$, $\sigma^2_{\tau}$, and the
+interclass coefficient, using formulas from section 3.9.3 of the textbook.
+
+```{r}
+sigma_sqs = vector(length = 2)
+sigma_sqs[1] <- aov_table$meansq[2] # estimate for sigma^2
+sigma_sqs[2] <- (aov_table$meansq[1] - aov_table$meansq[2]) / n # estimate for sigma^2_tau
+
+sigma_sqs
+sigma_sqs[2] / sum(sigma_sqs) # ICC
+```
+
+From these statistics, we can also make confidence intervals, using known
+reference distributions for rescaled versions of these statistics.
+
+```{r}
+int_bounds <- c(0.975, 0.025)
+(N - a) * sigma_sqs[1] / qchisq(int_bounds, N - a) # CI for sigma^2
+
+# CI for ICC
+ratio_bounds <- 1 / n * (aov_table$statistic[1] / qf(int_bounds, a - 1, N - a) - 1)
+ratio_bounds / (1 + ratio_bounds)
+```
+
+# Maximum Likelihood
+
+An alternative to the method of moments is to use maximum
+likelihood^[Technically, we're using restricted maximum likelihood, since we
+don't want any variance estimates to be smaller than 0.] We can use the `lme4`
+package^[This package was developed by Professor Bates' group, and it's used
+around the world.]. The syntax `(1 | variable)` means that this variable should
+be treated as a random effect. Notice that the estimates are almost exactly the
+same as those form the method of moments.
+
+```{r}
+loom_reml <- lmer(strength ~ 1 + (1 | Loom), data = loom)
+summary(loom_reml)
+```
+
+We can also compute confidence intervals, using the restricted maximum
+likelihood approach. Notice that, even though our point estimate for
+$\hat{\sigma}^2$ is close, the associated confidence intervals is quite
+different. This may be due to the fact that we have relatively few samples, and
+both the method of moments and maximum likelihood estimators depend on theory
+that supposes the number of samples is tending to $\infty$.
+
+```{r}
+confint(loom_reml) ^ 2 # confint's are for sigma, without the square
+```

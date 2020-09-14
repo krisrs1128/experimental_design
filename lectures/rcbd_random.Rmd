@@ -1,0 +1,37 @@
+---
+title: "Randomized Complete Block Designs"
+output: html_notebook
+---
+
+Let's load some libraries. `lme4` should catch your eye -- it's the library that
+will always come up wheenver we talk about random effects.
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("lme4")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+We'll download the graft data again.
+```{r}
+graft <- read_table2("https://uwmadison.box.com/shared/static/0ciblk4z2f3k6zizbj4plg3q33w1d0n6.txt") %>%
+  melt(id.vars = "Pressure", variable.name = "batch", value.name = "yield") %>%
+  mutate(Pressure = as.factor(Pressure))
+```
+
+Let's fit a model with a random effect on the blocks (the batch number). The
+notation for random effects is the same as it was from before. Compare the
+results below with Table 4.6. They are the same maximum likelihood fit, there
+are just some differences in how they the results are reported. For example, the
+$$R^2$$ is only reported in the JMP output, and the output from `lmer` displays
+intervals for $\sigma_{\tau}$ rather than $\sigma_{\tau}^{2}$.
+
+```{r}
+fit <- lmer(yield ~ Pressure + (1 | batch), data = graft)
+summary(fit)
+anova(fit)
+confint(fit)
+```

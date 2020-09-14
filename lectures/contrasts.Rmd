@@ -1,0 +1,62 @@
+---
+title: "Contrasts"
+output: html_document
+---
+
+First, let's download and visualize a dataset for ANOVA.
+
+```{r}
+library("broom")
+library("dplyr")
+library("ggplot2")
+library("gmodels")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+```{r}
+etch <- read_csv("https://uwmadison.box.com/shared/static/3ltmo89ea0xowsh1386x9fk58qc51ned.txt")
+etch$Power <- as.factor(etch$Power)
+etch
+```
+
+Before, we can an anova on the difference between power levels, and found
+(unsurprisingly) that there was a big difference in etch rate between power
+levels.
+
+```{r}
+m_etch <- etch %>%
+  melt(measure.vars = paste0("Ob", 1:5), value.name = "etch_rate") %>%
+  arrange(Power)
+
+fit <- lm(etch_rate ~ Power, data = m_etch)
+aov_fit <- aov(fit)
+summary(aov_fit)
+```
+
+Let's say we're interested in the contrast between power levels of 160 and 180.
+We have to encode this as a contrast object, and then pass it to the
+`fit.contrast` function.
+
+```{r}
+contrast <- c(1, -1, 0, 0)
+fit.contrast(aov_fit, "Power", contrast)
+```
+
+We can also do several contrasts at a time.
+
+```{r}
+contrasts <- matrix(
+    c(1, -1, 0, 0,
+      1, 1, -1, -1),
+    nrow = 2, byrow = TRUE
+  )
+fit.contrast(aov_fit, "Power", contrasts)
+```
+
+And you can get confidence intervals by passing in the `conf.int` parameter.
+
+```{r}
+fit.contrast(aov_fit, "Power", contrasts, conf.int = 0.95)
+```

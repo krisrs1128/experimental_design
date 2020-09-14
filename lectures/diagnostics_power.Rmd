@@ -1,35 +1,94 @@
 ---
-title: "Diagnostics"
+title: "Diagnostics and Power"
 output: html_notebook
 ---
 
 ```{r}
 library("ggplot2")
 library("dplyr")
+library("reshape2")
 theme_set(theme_bw())
 ```
 
+# Normal Probability Plots
+
+First, let's get a sense of how normal probability plots work. Note that the
+axes are reversed compared to the definition in the textbook.
+
 ```{r}
-x <- rpois(4000, 5)
-x <- data.frame(x)
+x <- rnorm(1000)
+tau <- 1.8
+x[x > tau] <- runif(sum(x > tau), 1, 1.4) * x[x > tau]
+hist(x, 50)
+```
+```{r}
+qqnorm(x)
+abline(a = 0, b = 1, col = "red")
+```
+# Power Analysis
 
-ggplot(x) +
-  geom_histogram(aes(x = x), binwidth = 0.5)
+We'll write some code to do a power analysis in the two sample t-test. We'll see
+how varying the underlying signal strength and the collected sample size
+influence the test results.
 
-ggplot(x) +
-  geom_histogram(aes(x = sqrt(1 + x)), binwidth = 0.1)
+First, let's write a small function to simulate data from a set of normal
+distributions.
+
+```{r}
+simulate_data <- function(true_means, n, sigma=1) {
+  X <- matrix(nrow = n, ncol = length(true_means))
+  for (i in seq_len(n)) {
+    X[i, ] <- rnorm(length(true_means), true_means, sigma)
+  }
+
+  melt(X, varnames = c("index", "group"))
+}
 ```
 
+Next, we'll simulate many runs across a range of signal strengths.
 
 ```{r}
-x <- exp(matrix(rnorm(5e3 * 2), 5e3, 2))
-x <- data.frame(x)
+alpha <- 0.05
+N <- 1000 # sample size per group
+mu_seq <- seq(0, .5, 0.05) # power levels
+B <- 200 # number of reps per level
+test_result <- list()
 
-ggplot(x) +
-  geom_point(aes(x = X1, y = X2), alpha = 0.2)
+# loop over signal strengths levels
+for (i in seq_along(mu_seq)) {
+  print(mu_seq[i])
+  
+  # many reps for signal level
+  test_result[[i]] <- vector(length = B)
+  for (j in seq_len(B)) {
+    x <- simulate_data(c(0, mu_seq[i]), N)
+    test_result[[i]][[j]] <- t.test(x$value[x$group == 1], x$value[x$group == 2])$p.value
+  }
+  
+  # save a plot
+  p <- ggplot(x) +
+    geom_histogram(aes(x = value, fill = as.factor(group)), position = "identity", alpha = 0.7) +
+    scale_fill_brewer(palette = "Set2") +
+    ggtitle(sprintf("mu[1] = %s", mu_seq[i]))
+  print(p)
+}
 
-ggplot(x) +
-  geom_point(aes(x = X1, y = X2), alpha = 0.2) +
-  scale_x_log10() +
+names(test_result) <- mu_seq
+mtest_result <- melt(test_result)
+```
+
+Now that we've simulated the data and run all the tests, we can look at the average power.
+
+```{r}
+colnames(mtest_result) <- c("p.value", "mu")
+ggplot(mtest_result) +
+  geom_hline(aes(yintercept = 0.05), col = "red") +
+  geom_jitter(aes(x = mu, y = p.value)) +
   scale_y_log10()
+
+ggplot(mtest_result %>%
+         group_by(mu) %>%
+         summarise(power = mean(p.value < 0.05))) +
+  geom_point(aes(x = mu, y = power))
 ```
+

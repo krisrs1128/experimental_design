@@ -1,0 +1,49 @@
+---
+title: "Factorial Design Intro"
+output: html_notebook
+---
+
+Let's look at the structure of a factorial design experiments. We won't fit any
+models, but we'll build some intuition for how the data are usually structured
+and how you can go about plotting it.
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+We'll download the battery dataset, which asked how manufacturing material and
+temperature both can influence the life of a battery.
+
+```{r}
+battery <- read_table2("https://uwmadison.box.com/shared/static/vmxs2wcsdxkdjujp85nw5kvk83xz4gl9.txt") %>%
+  mutate(Material = as.factor(Material))
+```
+
+We'll make two plots. The first plots the two factors as two axes and shows the
+response as the color at each coordinate. The second uses the principle of small
+multiples, and shows the relationship between temperature and life, for each
+type of material.
+
+```{r}
+ggplot(battery) +
+  geom_point(
+    aes(x = Material, y = Temperature, col = Life),
+    position = position_jitter(w = 0.1, h = 1)
+  ) +
+  scale_color_viridis_c()
+
+ggplot(battery) +
+  geom_point(aes(x = Temperature, y = Life)) +
+  facet_wrap(~ Material)
+```
+
+```{r}
+ggplot(battery) +
+  geom_point(aes(x = Material, y = Life)) +
+  facet_wrap(~Temperature)
+```
+

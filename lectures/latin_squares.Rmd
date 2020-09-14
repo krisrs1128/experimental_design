@@ -1,0 +1,62 @@
+---
+title: "Latin Squares"
+output: html_notebook
+---
+
+As usual, we'll load some libraries.
+```{r}
+library("readr")
+library("agricolae")
+library("ggplot2")
+library("dplyr")
+theme_set(theme_bw())
+```
+
+Before looking at a data example, let's check out the `agricolae` library, which
+makes it easy to generate different Latin Squares.
+```{r}
+trt <- LETTERS[1:10]
+latin_square <- design.lsd(trt)
+head(latin_square$book)
+ggplot(latin_square$book) + 
+  geom_tile(aes(x = row, y = col, fill = trt))
+  #scale_fill_brewer(palette = "Set1")
+```
+
+Now that we see how we would generate a latin square in theory, let's analyze
+the results of a study that used a latin square in its design.
+```{r}
+rocket <- read_table2("https://uwmadison.box.com/shared/static/ac68766l3zcjog1ldrzki3lis74bbd71.txt") %>%
+  mutate(
+    Batch = as.factor(Batch),
+    Operator = as.factor(Operator),
+    Formulation = as.factor(Formulation)
+  )
+```
+
+Compare the table below with table 4.9 in the book. It makes clear that the
+study was a latin square design. We can also make a visualization of the design,
+because reading tables of numbers is hard.
+```{r}
+rocket %>%
+  dcast(Batch ~ Operator, value = "Formulation")
+
+ggplot(rocket) +
+  geom_tile(aes(x = Operator, y = Batch, fill = Formulation)) +
+  scale_fill_brewer(palette = "Set1")
+```
+
+Given this design, we can fit the model using a linear model. Here,
+$$\alpha_{i}, \tau_{j}$$, and $$\beta_{k}$$ are the batch, formulation, and
+operator, respectively. We'll use the shorthand `y ~ .` to refer to the model
+using all the other variables in the data frame as inputs.
+```{r}
+#fit <- lm(BurningRate ~ Batch + Operator + Formulation, data = rocket) # gives exact same result
+fit <- lm(BurningRate ~ ., data = rocket)
+summary(fit)
+```
+
+Compare the ANOVA table below with Table 4.12.
+```{r}
+anova(fit)
+```

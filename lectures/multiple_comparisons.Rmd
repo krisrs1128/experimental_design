@@ -1,0 +1,67 @@
+---
+title: "Multiple Comparisons"
+output: html_document
+---
+
+First, let's download and visualize a dataset for ANOVA.
+
+```{r}
+library("DescTools")
+library("broom")
+library("dplyr")
+library("ggplot2")
+library("gmodels")
+library("readr")
+library("reshape2")
+theme_set(theme_bw())
+```
+
+This code just makes the same anova fit from before.
+
+```{r}
+etch <- read_csv("https://uwmadison.box.com/shared/static/3ltmo89ea0xowsh1386x9fk58qc51ned.txt")
+etch$Power <- as.factor(etch$Power)
+m_etch <- etch %>%
+  melt(measure.vars = paste0("Ob", 1:5), value.name = "etch_rate") %>%
+  arrange(Power)
+
+fit <- lm(etch_rate ~ Power, data = m_etch)
+aov_fit <- aov(fit)
+summary(aov_fit)
+```
+
+Let's define a few different contrasts, and then use Scheffe's method to adjust
+the confidence intervals from an uncorrected fit. We'll use the `PostHocTest` in
+the `DescTools` package, which unfortunately has a slightly different syntax
+than `fit.contrasts` in `gmodels`.
+
+```{r}
+contrasts <- matrix(
+    c(1, -1, 0, 0,
+      1, 1, -1, -1,
+      0, 0, 1, -1),
+    nrow = 3, byrow = TRUE
+  )
+rownames(contrasts) <- c("160 - 180", "160,180 - 200,220", "200 - 220")
+fitc <- fit.contrast(aov_fit, "Power", contrasts, conf.int = 0.95)
+scheffe_fitc <- PostHocTest(aov_fit, method = "scheffe", conf.level = 0.95, contrast = t(contrasts))
+```
+
+
+
+```{r}
+fitc[, c("lower CI", "upper CI")]
+scheffe_fitc$Power[, c("lwr.ci", "upr.ci")]
+```
+
+If we just care about all pairwise comparisons, we could just use Tukey's HSD.
+
+```{r}
+TukeyHSD(aov_fit)
+```
+
+If you don't actually care about experimentwise error, you can use Fisher's LSD.
+
+```{r}
+PostHocTest(aov_fit, method = "lsd", conf.level = 0.95)
+```

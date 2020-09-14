@@ -1,0 +1,104 @@
+---
+title: "Balanced Incomplete Block Designs"
+output: html_notebook
+---
+
+Let's load some libraries. The `daewr` and `crossdes` libraries have general
+functions useful for BIBD.
+```{r}
+library("crossdes")
+library("daewr")
+library("dplyr")
+library("ggplot2")
+library("gmodels")
+library("lsmeans")
+library("readr")
+theme_set(theme_bw())
+```
+
+This function let's us see what's the minimum number of blocks we'd need in
+order to have a balanced design, when we know that are $t$ treatments and only
+$k$ can be applied per block. For example, in the example below, there are no
+designs with only 9 blocks, which would achieve balance (you could randomly
+assign 3 treatments to each block, but you'd no longer be able to use BIBD
+analysis techniques).
+```{r}
+BIBsize(t = 5, k = 3)
+```
+
+Once we know the the number of blocks that are needed, we can find a specific
+design using the `find.BIB` function from `crossdes`. Each row is a block, and
+the columns give the three treatments to run for each block. You can count that
+there are always 3 appearances of each level pair -- this is exactly the
+$\lambda$ we saw before.
+```{r}
+find.BIB(trt = 5, b = 10, k = 3)
+```
+Those are the functions you might use at the start of an experiment, when you're
+still trying to figure out how many blocks to use and which treatments to assign
+to each block. Now, let's suppose you've run an experiment and want to estimate
+the associated treatment effects. We'll download the `catalyst` experiment,
+which tried to see the effect of different catalysts on chemical reaction time,
+adjusting for nuisance batch-to-batch variation.
+```{r}
+catalyst <- read_table2("https://uwmadison.box.com/shared/static/2tfwo6oohyffw0x299105rj54iabkw4u.txt") %>%
+  mutate(
+    Batch = as.factor(Batch),
+    Catalyst = as.factor(Catalyst)
+  )
+```
+
+To get a sense of the data, we'll make some plots of reaction time, both against
+batch ID and catalyst type. Note that we only run three catalysts per batch.
+There seem to be definitive batch-to-batch differences, but it's unclear whether
+any of these catalysts are really any different from the others.
+```{r}
+ggplot(catalyst) +
+  geom_point(aes(x = Batch, y = Time, col = Catalyst), position = position_jitter(w = 0.1)) +
+  scale_color_brewer(palette = "Set2")
+
+ggplot(catalyst) +
+  geom_text(aes(x = Catalyst, y = Time, col = Catalyst, label = Batch), position = position_jitter(w = 0.1)) +
+  scale_color_brewer(palette = "Set2")
+```
+
+To estimate the effects for each catalyst, we can use `lm`. The associated ANOVA
+gives evidence against the null that the catalysts are equal, and the
+corresponding confidence intervals suggests that catalyst 4 has a longer
+reaction time than would be believable under the null. This is a nice situation
+in which something that wasn't obvious visually becomes more clear when we
+apply a principled testing procedure.
+```{r}
+fit <- lm(Time ~ ., data = catalyst)
+summary(fit)
+```
+
+Compare the ANOVA table below with table 4.25. Note that only the unadjusted
+block mean square is displayed below.
+```{r}
+anova(fit)
+confint(fit)
+```
+
+We can also compute contrasts in the way that we're used to. Here, we're
+studying two hypotheses related to catalyst 4 (do it and catalyst 1 have larger
+reaction times than the others? is catalyst 4 larger than catalyst 3?).
+```{r}
+contrasts <- matrix(
+  c(1, -1, -1, 1,
+    0, 0, 1, -1),
+  nrow = 2, byrow=TRUE
+)
+
+fit.contrast(aov(fit), "Catalyst", contrasts)
+```
+
+We can also control for multiple comparisons, but we need to use a different
+function, since our usual `PostHocTest` isn't implemented to cover the case of
+incomplete block designs. Instead, we can use the `lsmeans` function.
+Unsurprisingly, the most significant tests seem to be highlighting the
+discrepancy between catalyst 4 and the others.
+```{r}
+lsmeans(fit, pairwise ~ Catalyst, adjust = "None") # fisher's LSD
+lsmeans(fit, pairwise ~ Catalyst, adjust = "Tukey") # tukey's test
+```

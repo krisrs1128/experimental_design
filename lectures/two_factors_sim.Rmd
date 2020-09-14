@@ -1,0 +1,106 @@
+---
+title: "Two Factors Simulation"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r}
+library("dplyr")
+library("reshape2")
+library("tidyr")
+library("ggplot2")
+theme_set(theme_bw())
+knitr::opts_chunk$set(fig.width=5, fig.height=3) 
+```
+
+Let's simulate from some made-up model where all the $\tau_i$'s, $\beta_j$'s,
+and $\left(\tau\beta\right)_{ij}$'s are 0. That is, all the null hypotheses are
+actually true in this simulation. We'll suppose there are two replicates for
+factor combination.
+
+```{r}
+a <- 5 # levels for first factor
+b <- 4 # levels for second factor
+n <- 3 # number of replicates
+X <- array(rnorm(a * b * n), dim = c(a, b, n))
+
+tau <- c(1, 2, 3, 4, 5)
+beta <- c(1, 2, 3, 2)
+taubeta <- 0.1 * outer(seq_len(a), seq_len(b))
+#tau <- rep(0, 5)
+#beta <- rep(0, 5)
+taubeta <- 0.0 * outer(seq_len(a), seq_len(b))
+
+for (i in seq_len(a)) {
+  X[i,, ] <- X[i,, ] + tau[i]
+}
+
+for (j in seq_len(b)) {
+  X[, j, ] <- X[, j, ] + beta[j]
+}
+
+for (n_ in seq_len(n)) {
+  X[,, n_] <- X[,, n_] + 10 * taubeta
+}
+```
+We'll `melt` the data to make it amenable to plotting.
+
+```{r}
+mX <- melt(X, varnames = c("A", "B", "replicate")) %>%
+  mutate(
+    A = as.factor(A),
+    B = as.factor(B)
+  )
+head(mX)
+```
+
+```{r}
+ggplot(mX) +
+  geom_point(aes(x = A, y = B, color = value), position = position_jitter(0.1, 0.1)) +
+  scale_colour_viridis_b()
+
+ggplot(mX) +
+  geom_point(aes(x = A, y = value, col = value)) +
+  scale_colour_viridis_b() +
+  facet_wrap(~ B)
+
+ggplot(mX) +
+  geom_point(aes(x = B, y = value, col = value)) +
+  scale_colour_viridis_b() +
+  facet_wrap(~ A)
+```
+
+```{r}
+m_means <- list(
+  "A" = mX %>%
+    group_by(A) %>%
+    summarise(mA = mean(value)),
+  "B" = mX %>%
+    group_by(B) %>%
+    summarise(mB = mean(value))
+)
+m_means$AB <- expand_grid(m_means$A, m_means$B)
+  
+# visualize SS_A
+ggplot() +
+  geom_point(data = mX, aes(x = A, y = value, col = value)) +
+  geom_hline(yintercept = mean(mX$value), col = "red") +
+  geom_point(data = m_means$A, aes(x = A, y = mA), size = 3, shape = 0) +
+  scale_colour_viridis_b()
+
+# visualize SS_B
+ggplot() +
+  geom_point(data = mX, aes(x = B, y = value, col = value)) +
+  geom_hline(yintercept = mean(mX$value), col = "red") +
+  geom_point(data = m_means$B, aes(x = B, y = mB), size = 3, shape = 0) +
+  scale_colour_viridis_b()
+
+# visualize SS_AB
+ggplot() +
+  geom_point(data = mX, aes(x = A, y = value, col = value)) +
+  geom_hline(yintercept = mean(mX$value), col = "red") +
+  geom_point(data = m_means$AB, aes(x = A, y = mA + mB - mean(mX$value)), size = 3, shape = 0) +
+  facet_wrap(~ B) +
+  scale_colour_viridis_b()
+```

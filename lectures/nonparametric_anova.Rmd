@@ -1,0 +1,61 @@
+---
+title: "Nonparametric ANOVA"
+output: html_notebook
+---
+
+```{r}
+library("readr")
+library("reshape2")
+library("dplyr")
+library("broom")
+library("ggplot2")
+theme_set(theme_bw())
+```
+
+This is the same etch rate data we used in ordinary ANOVA.
+
+```{r}
+etch_wide <- read_csv("https://uwmadison.box.com/shared/static/3ltmo89ea0xowsh1386x9fk58qc51ned.txt") %>%
+  mutate(Power = as.factor(Power))
+etch <- melt(etch_wide, id.vars = "Power", value.name = "etch_rate")
+```
+
+The `R` function that performs nonparametric ANOVA is called `kruskal.test`. The
+result is significant, but note the slight loss in power, compared to the
+earlier parametric ANOVA.
+
+```{r}
+kruskal.test(etch_rate ~ Power, data = etch)
+```
+
+We can get an intuitive feel for how this test works by looking at a plot of
+ranks againt power level.
+
+```{r}
+etch <- etch %>%
+  mutate(rank = rank(etch_rate))
+etch
+
+ggplot(etch) +
+  geom_point(aes(x = Power, y = rank))
+```
+
+To see why this nonparametric approach might be handy, consider the sensitivity of the standard ANOVA to outliers.
+
+```{r}
+sim_data_ <- matrix(rnorm(500), ncol = 4)
+sim_data_[c(1, 2), 1] <- runif(2, 100, 250)
+sim_data <- melt(sim_data_, varnames = c("sample", "group"))
+
+ggplot(sim_data) +
+  geom_point( aes(x = group, y = value))
+```
+
+The ANOVA is very sensitive to this outlier, but the nonparametric ANOVA doesn't
+think there's much of a difference between these groups (because the one outlier
+is converted to just a rank).
+
+```{r}
+anova(lm(value ~ group, data = sim_data))
+kruskal.test(value ~ group, data = sim_data)
+```
