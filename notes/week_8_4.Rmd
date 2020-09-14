@@ -20,20 +20,33 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small")
 ```
 
-```{r}
+```{r, echo = FALSE}
 library("dplyr")
 library("ggplot2")
 library("readr")
 library("tufte")
+library("FrF2")
 theme_set(theme_bw())
 ```
 
 * As before, the $SS$ terms can be obtained by squaring the contrasts and dividing by the number of data points
 
 	* Can build associated ANOVA tables
-	
-* We can view the data through a regression. The full model would be
 
+```{r, echo = FALSE}
+plasma <- read.table("https://uwmadison.box.com/shared/static/f3sggiltyl5ycw1gu1vq7uv7omp4pjdg.txt", header = TRUE) %>%
+  mutate(
+    A = as.factor(A),
+    B = as.factor(B),
+    C = as.factor(C)
+  )
+```
+
+```{r, echo = FALSE, margin_note=TRUE}
+fit <- lm(Rate ~ A * B * C, data = plasma)
+anova(fit)
+```
+* We can view the data through a regression. The full model would be
 $$y_{i} = \beta_0 + \sum_{k = 1}^{3} \beta_k x_{ik} + \sum_{\text{pairs } k, k^\prime} \beta_{k k^\prime} x_{ik}x_{ik^{\prime}} + \epsilon_{i}$$
 though we will often be interested in whether a submodel (which discards some of
 the main or interaction effects) can do as well.
@@ -42,7 +55,12 @@ the main or interaction effects) can do as well.
 
 $$R^2 = \frac{SS_{Model}}{SS_{Total}} = 1 - \frac{SS_{E}}{SS_{Total}}$$
 
-(draw a picture that compares the numerator and denominator), in low and high noise situations)
+```{r, echo = FALSE, fig.margin = TRUE}
+library("EBImage")
+display(readImage("https://uwmadison.box.com/shared/static/jfuio2kkqrf2nd4p0o2qo4xeeqsevf4w.png"))
+display(readImage("https://uwmadison.box.com/shared/static/fduofd4qc486n2vzqmg6uchw63cl2h5t.png"))
+```
+
 
 * Instead of trying to understand the entire model’s importance, we might want
 to understand the importance of specific terms
@@ -50,7 +68,7 @@ to understand the importance of specific terms
 
 _Example calculation_: Variance estimate for effect of A.
 \begin{align*}
-\text{Var}\left(Effect A\right) &= \text{Var}\left(\frac{1}{2^{K - 1} n}\left(a - b - c + ab + ...\right)\right) \\
+\text{Var}\left(\text{Effect }A\right) &= \text{Var}\left(\frac{1}{2^{K - 1} n}\left(a - b - c + ab + ...\right)\right) \\
 &= \left(\frac{1}{2^{K - 1} n}\right)^2\text{Var}\left(a - b - ac + ab + ...\right)
 \end{align*}
 
@@ -63,14 +81,20 @@ But remember that $a$ refers to the sum of all samples at corner $a$, and likewi
 
 so at the end of the day, we get
 \begin{align*}
-\text{Var}\left(Effect A\right) &= \frac{\sigma^2}{2^{K - 2}n}
+\text{Var}\left(\text{Effect }A\right) &= \frac{\sigma^2}{2^{K - 2}n}
 \end{align*}
 
 and we can estimate $\sigma^2$ by the error sum fo squares $S^2$. From these
 variance estimates, we can build confidence intervals that summarize all the
 effects.
 
-## Code Example throughout: [Plasma Etching]
+```{r, echo = FALSE}
+summary(fit)
+```
+
+```{r, fig.height = 4, echo = FALSE}
+DanielPlot(fit)
+```
 
 ## Generalization: $2^K$ designs
 

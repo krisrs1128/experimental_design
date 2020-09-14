@@ -17,7 +17,12 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small")
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE)
+```
+
+```{r, fig.margin = TRUE}
+library("EBImage")
+display(readImage("https://uwmadison.box.com/shared/static/sie5e1b8v005l5ow8wzbtpehfdpn7wnf.png"))
 ```
 
 ```{r}
@@ -39,6 +44,26 @@ general patterns
 	* Visualize as corners of a cube
 	
 	* Call the third factor $C$.
+	
+```{r}
+plasma <- read.table("https://uwmadison.box.com/shared/static/f3sggiltyl5ycw1gu1vq7uv7omp4pjdg.txt", header = TRUE) %>%
+  mutate(
+    A = as.factor(A),
+    B = as.factor(B),
+    C = as.factor(C)
+  )
+```
+
+```{r, fig.height = 5, fig.margin = TRUE}
+ggplot(plasma) +
+  geom_point(
+    aes(x = A, y = B, col = Rate),
+    position = position_jitter(w = 0.1, h = 0.1)
+  ) +
+  facet_grid(C ~ .) +
+  scale_color_viridis_c() +
+  theme(legend.position = "bottom")
+```
 
 ## Effect Estimates
 
@@ -68,12 +93,21 @@ To estimate interactions, look at how average effects change when you condition.
 | --- | ------| 
 | + | $\frac{1}{2^2 n}\left[\left(abc - bc\right) + \left(ab - b\right)\right]$ |
 | - | $\frac{1}{2^2 n}\left[\left(ac - c\right) + \left(a - \left(1\right)\right)\right]$ |
-| Difference | $\frac{1}{2^2 n}\left[abc - bc + ab - b - ac + c - a + \left(1\right)\right]$ |
 
-(Draw a picture for this)
+Which inspires the definition,
+
+$$
+AB = \frac{1}{2^2 n}\left[abc - bc + ab - b - ac + c - a + \left(1\right)\right]
+$$
 
 And notice that the associated contrast can be obtained by multiplying the
 columns in the table above.
+
+```{r, fig.margin = TRUE}
+display(readImage("https://uwmadison.box.com/shared/static/3j76s251jeervxrqheo8dqrm5vvq7e63.png"))
+display(readImage("https://uwmadison.box.com/shared/static/8h0vt5kcb5ss0l9dlghsswnpf88q8267.png"))
+```
+
 
 | A | B | C | AB | label |
 | --- | --- | --- | --- | ------| 
@@ -86,6 +120,8 @@ columns in the table above.
 | - | + | + | - |  bc |
 | + | + | + | + | abc |
 
-The three-way interaction is defined as the change in two-way interactions
-across the two values for the third variable. We won’t prove why this works, but
-you can use it as a device for avoiding having to memorize everything.
+We won’t prove why this works, but you can use it as a device for avoiding
+having to memorize everything. The three-way interaction is defined as the
+change in two-way interactions across the two values for the third variable.
+It's contrast can be derived also by multiplying the relevant columns from the
+table above.
