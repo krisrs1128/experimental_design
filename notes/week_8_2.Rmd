@@ -1,0 +1,73 @@
+---
+title: "Interpreting Effects in $2^2$ Designs"
+subtitle: "Week 8 [1]"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+Reading: 6.2
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small")
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("tufte")
+theme_set(theme_bw())
+```
+
+We will often want to know whether estimated main or interaction effects are
+significant. We can use ANOVA, though be wary when $n$ is small.
+
+* The numerators in the effect estimate expressions will be called _contrasts_
+for the estimated effect
+* For example, the contrast for the effect of $A$ is $ab + a - b -
+\left(1\right)$.
+* The associated sum of squares is
+$$
+\frac{1}{2^2 n}\left(Contrast\right)^2
+$$
+for example,
+$$
+SS_A = \frac{1}{2^2 n}\left[ab + a - b - (1)\right]^2
+$$
+The associated ANOVA decomposition is
+$$
+SS_T = SS_A + SS_B + SS_AB + SS_E
+$$
+and since the factors all have two levels, the associated DF’s for the main and
+interaction terms are all 1. The df of $SS_T$ is $n 2^2 - 1$ (number of
+samples minus one). Taking the ratio between main and interaction $SS$ terms and
+$SS_E$ gives the basis for F-statistics in the ANOVA table.
+
+## Regression View
+
+Another way of summarizing the $2^2$ model is to write a regression,
+$$
+y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \epsilon
+$$
+where the $x_k$’s take on one of two values, depending on whether or not factor $k$ is active.
+
+* We’ve only included main effects. An interaction would be added via $\beta_{12} x_{1}x_{2}$
+
+* If the factors are binary (on vs. off), we can use a binary encoding. 
+
+* What if they are actually continuous?
+
+	* Use a _natural coding_, which converts low and high levels to ${-1, 1}$.
+	
+	* Model will apply to all values in interval $[-1, 1]$.
+	
+(show an associated response surface)

@@ -1,0 +1,91 @@
+---
+title: "$2 ^ 3$ Factorial Design"
+subtitle: "Week 8 [3]"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+Reading: 6.3
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small")
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("tufte")
+theme_set(theme_bw())
+```
+
+* How can we generalize the $2^2$ analysis so that we can do studies that
+inspect many factors simultaneously (all at two levels each)?
+
+* We’ll analyze the 3 factor case (the $2^3$ design) first, but in search of
+general patterns
+
+* For the $2^3$ design, we have 8 factor configurations
+
+	* Visualize as corners of a cube
+	
+	* Call the third factor $C$.
+
+## Effect Estimates
+
+Our table notation can be extended to deal with all 8 corners of the cube.
+
+| A | B | C | label |
+|---|---|--- | ---------|
+| - | - | - | (1) |
+| + | - | - | a       |
+| - | + | - | b       |
+| - | - | + | c       |
+| + | + | - | ab      |
+| + | - | + | ac      |
+| - | + | + | bc      |
+| + | + | + | abc   |
+
+* The main effect estimates can be made by subtracting the + from the - corners
+ 	* Average of when factor is on vs. off
+	* Average of one face of the cube minus the average of the opposite
+
+For example,
+$$A = \frac{1}{2^2 n}\left[\left(a + ab + ac + abc\right) - \left(\left(1\right) + b + c + bc\right)\right]$$
+
+To estimate interactions, look at how average effects change when you condition.
+
+| B | Average A Effect | 
+| --- | ------| 
+| + | $\frac{1}{2^2 n}\left[\left(abc - bc\right) + \left(ab - b\right)\right]$ |
+| - | $\frac{1}{2^2 n}\left[\left(ac - c\right) + \left(a - \left(1\right)\right)\right]$ |
+| Difference | $\frac{1}{2^2 n}\left[abc - bc + ab - b - ac + c - a + \left(1\right)\right]$ |
+
+(Draw a picture for this)
+
+And notice that the associated contrast can be obtained by multiplying the
+columns in the table above.
+
+| A | B | C | AB | label |
+| --- | --- | --- | --- | ------| 
+| - | - | - | + | (1) |
+| + | - | - | - | a |
+| - | + | - | - | b |
+| - | - | + | + | c |
+| + | + | - | + | ab |
+| + | - | + | - | ac |
+| - | + | + | - |  bc |
+| + | + | + | + | abc |
+
+The three-way interaction is defined as the change in two-way interactions
+across the two values for the third variable. We won’t prove why this works, but
+you can use it as a device for avoiding having to memorize everything.

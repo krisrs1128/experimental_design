@@ -1,0 +1,80 @@
+---
+title: "Interpreting effects in $2 ^ 3$ Designs"
+subtitle: "Week 8 [4]"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+Reading: 6.3, 6.4
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small")
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("tufte")
+theme_set(theme_bw())
+```
+
+* As before, the $SS$ terms can be obtained by squaring the contrasts and dividing by the number of data points
+
+	* Can build associated ANOVA tables
+	
+* We can view the data through a regression. The full model would be
+
+$$y_{i} = \beta_0 + \sum_{k = 1}^{3} \beta_k x_{ik} + \sum_{\text{pairs } k, k^\prime} \beta_{k k^\prime} x_{ik}x_{ik^{\prime}} + \epsilon_{i}$$
+though we will often be interested in whether a submodel (which discards some of
+the main or interaction effects) can do as well.
+	
+* To compare a full and a submodel, use the relative sums of squares,
+
+$$R^2 = \frac{SS_{Model}}{SS_{Total}} = 1 - \frac{SS_{E}}{SS_{Total}}$$
+
+(draw a picture that compares the numerator and denominator), in low and high noise situations)
+
+* Instead of trying to understand the entire model’s importance, we might want
+to understand the importance of specific terms
+* For this, it’s useful to have an uncertainty estimate
+
+_Example calculation_: Variance estimate for effect of A.
+\begin{align*}
+\text{Var}\left(Effect A\right) &= \text{Var}\left(\frac{1}{2^{K - 1} n}\left(a - b - c + ab + ...\right)\right) \\
+&= \left(\frac{1}{2^{K - 1} n}\right)^2\text{Var}\left(a - b - ac + ab + ...\right)
+\end{align*}
+
+But remember that $a$ refers to the sum of all samples at corner $a$, and likewise for $b$, $ac$, etc.,
+\begin{align*}
+\text{Var}\left(a - b - ac + ab + ...\right) &= \text{Var}\left(\sum_{\text{corner } a}y_{i} - \sum_{\text{corner }b}y_{i} - \sum_{\text{corner }ac}y_{i} + ...\right) \\
+&= \sum_{\text{corner } a}\text{Var}\left(y_i\right) + \sum_{\text{corner }b}\text{Var}\left(y_i\right) + ...  \\
+&= 2^K n \sigma^2
+\end{align*}
+
+so at the end of the day, we get
+\begin{align*}
+\text{Var}\left(Effect A\right) &= \frac{\sigma^2}{2^{K - 2}n}
+\end{align*}
+
+and we can estimate $\sigma^2$ by the error sum fo squares $S^2$. From these
+variance estimates, we can build confidence intervals that summarize all the
+effects.
+
+## Code Example throughout: [Plasma Etching]
+
+## Generalization: $2^K$ designs
+
+Everything we’ve spoken about can be generalized to the case of arbitrary
+numbers of factors. For example, the table notation can be used to get effect
+estimate for interaction ABCD listed before equation 6.22 in the book, and the
+sum of squares remain just the normalized square of the contrasts.
