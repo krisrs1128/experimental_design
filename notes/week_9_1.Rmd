@@ -19,10 +19,11 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "footnotesize", echo = FALSE, fig.height = 4, cache = TRUE)
 ```
 
 ```{r}
+library("BsMD")
 library("dplyr")
 library("ggplot2")
 library("readr")
@@ -54,8 +55,11 @@ Let’s see how these problems arise, and discuss some solutions.
 be easy to miss
 
 * Fix: We can space out the levels at which we test each factor
-
-(example figure when not spaced out)
+```{r, fig.margin = TRUE}
+library("EBImage")
+display(readImage("https://uwmadison.box.com/shared/static/41twf6fdi67knj7xi9eivccxpwo4wu82.png"))
+display(readImage("https://uwmadison.box.com/shared/static/gnrwjf27ji5ld239odkmxl3836jy2imd.png"))
+```
 
 ## Spurious Effects
 
@@ -65,6 +69,11 @@ be easy to miss
 
 	* $\sigma^2$ is needed to perform ANOVA
 	
+```{r, fig.margin = TRUE}
+display(readImage("https://uwmadison.box.com/shared/static/rsp26h445gji26x2fsxr9qrshp1m23vi.png"))
+display(readImage("https://uwmadison.box.com/shared/static/jb4cte8l2glri1i845c4ftrzsua5jybp.png"))
+```
+	
 * Fix: Pool together higher-order interactions
 
 	* High-order interactions are typically rare (sparsity of effects principle)
@@ -73,7 +82,35 @@ be easy to miss
 	
 	* Pooling can only make testing more conservative
 	
-(Show lm with and without estimates of sigma^2)
+```{r, fig.margin = TRUE, fig.height = 4}
+filtration <- read_table2("https://uwmadison.box.com/shared/static/xxh05ngikmscnddbhg2l3v268jnu4jtc.txt") %>%
+  mutate_at(vars(-Rate), as.factor)
+ggplot(filtration) +
+  geom_point(aes(x = A, y = Rate, col = C)) +
+  scale_color_brewer(palette = "Set2") +
+  facet_grid(B ~ D)
+```
+
+## Data Example
+
+This is what happens when we try to estimate all interactions, even though there
+is only one replicate per factor configuration. We'll use the filtration
+dataset, which asks how temperature (A), pressure (B), formaldehyde (C), and
+stirring rate (D) affect the filtration rate of the resulting product. 
+`r margin_note("As usual, I'm clueless about the application (which would be very bad in a real-world project), but this is just to learn about unreplicated designs.")` 
+```{r}
+fit <- lm(Rate ~ A * B * C * D, data = filtration)
+summary(fit)
+anova(fit)
+```
+If we instead assume that all interactions terms of order 3 or higher are null,
+we can perform again perform ANOVA.
+
+```{r}
+fit <- lm(Rate ~ (A + B + C + D) ^ 2, data = filtration)
+summary(fit)
+anova(fit)
+```
 
 ## Design Projections
 
@@ -83,9 +120,10 @@ on the response
 * In this case, we may consider removing that factor and all the interaction
 terms that include it
 
-* By collapsing the factor, we double the number of replicates
-
-(show cube collapsed into a square)
+* By collapsing the factor, we double the number of effective replicates
+```{r, fig.margin = TRUE}
+display(readImage("https://uwmadison.box.com/shared/static/8h0vt5kcb5ss0l9dlghsswnpf88q8267.png"))
+```
 
 ## Visualing Effects
 
@@ -98,11 +136,38 @@ Graphical methods provide useful summaries for evaluating interactions in the $2
   
   * Idea: make a normal probability plot of the effects, and look for those which
   deviate from identity line. These are likely real effects.
+  
+```{r, fig.margin = TRUE, fig.height = 5}
+# estimate effects
+coded <- function(x) ifelse(x == '-', -1, 1)
+filtration_coded <- filtration %>%
+  mutate_at(vars(-Rate), coded)
+fit_coded <- lm(Rate~A*B*C*D, data=filtration_coded)
+effects <- 2 * coef(fit_coded)[-1] # exclude intercept
+
+# make qqplot
+qq <- qqnorm(effects, datax = TRUE)
+qqline(effects, col = "red", probs = c(0.3, 0.7), datax = TRUE)
+text(qq$x, qq$y, names(effects), pos=4)
+```
 
 * Lenth Plots
 
   * An alternative is to simply plot the effect sizes directly
   
-  * $1.5 \times \text{median}\left(\text{Contrast}_j\right)$ is often used as a
-  cutoff point, for the same reason that $1.5IQR$ is often used to detect
-  outliers.
+```{r, fig.margin = TRUE, fig.height = 5}
+LenthPlot(fit_coded, cex.fac = 0.4)
+```
+
+Let $s_0 = 1.5 \times \text{median}\left(\text{Contrast}_j\right)$.  Then, the
+notation here refers to
+
+* Pseudostandard error (PSE): $1.5 \times \text{median}\left(\left|c_j\right| :
+\left|c_j\right| < 2.5 s_0\right)$ serves as an alternative to the usual
+standard error over contrasts, which is robust to outliers (it completely
+ignores $c_j$'s that are larger than $2.5 s_0$.)
+* Margin of error (ME): A version of the critical $t$-value that relies on the
+robust standard error. Defined as $t_{0.025,\frac{m}{3}}\times PSE$, where $m$
+is the total number of effect estimates (columns in the Lenth plot).
+* Simultaneous margin of error (SME): A more conservative version of ME, to
+protect against multiple comparisons. 

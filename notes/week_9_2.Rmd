@@ -37,8 +37,8 @@ practice.
 
 ## Example 6.3
 
-An experiment was done to see how the « advance rate of a drill » varied as a
-function of four factors, which we will call A, B, C, and D[^1 But which are drill
+An experiment was done to see how the "advance rate of a drill" varied as a
+function of four factors, which we will call A, B, C, and D^[But which are drill
 load, flow rate, rotational speed, and drilling mud, in case you’re curious].
 
 As a first pass at the analysis, you fit a full $2^4$ model. The Daniel plot is
