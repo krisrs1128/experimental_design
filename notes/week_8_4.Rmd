@@ -25,7 +25,6 @@ library("dplyr")
 library("ggplot2")
 library("readr")
 library("tufte")
-library("FrF2")
 theme_set(theme_bw())
 ```
 
@@ -90,10 +89,6 @@ effects.
 
 ```{r, echo = FALSE}
 summary(fit)
-```
-
-```{r, fig.height = 4, echo = FALSE}
-DanielPlot(fit)
 ```
 
 ## Generalization: $2^K$ designs

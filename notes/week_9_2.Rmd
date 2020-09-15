@@ -1,0 +1,152 @@
+---
+title: "Examples of $2^K$ Designs"
+subtitle: "Week 9 [2]"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+Reading: 6.6
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("rsm")
+library("EBImage")
+library("tufte")
+theme_set(theme_bw())
+```
+
+Like the corresponding section in the book, these notes introduce no new
+technical material. Instead, they illustrate end-to-end analysis workflows for
+$2^K$ designs and highlight the types of judgments that need to be exercised in
+practice.
+
+## Example 6.3
+
+An experiment was done to see how the « advance rate of a drill » varied as a
+function of four factors, which we will call A, B, C, and D[^1 But which are drill
+load, flow rate, rotational speed, and drilling mud, in case you’re curious].
+
+As a first pass at the analysis, you fit a full $2^4$ model. The Daniel plot is
+below.
+
+(daniel plot)
+
+However, when you study the residuals, you notice that they have relatively
+heavy tails.
+
+(residual plot)
+
+Since the data are rates, you take a log-transform. The residuals look much
+better now, and the effect estimates are more interpretable too.
+
+(residual plot)
+(daniel plot)
+
+Lessons: 
+
+* Examining residuals can motivate useful transformations of the data.
+
+* It’s a good thing replicates were made.
+
+## Example 6.4
+
+An experiment was done to see how defect rate in airplane windows varied
+according to four factors: temperature (A), clamp time (B), resin flow (C), and
+press closing time (D).
+
+The estimated effects are displayed below. The story seems simple,
+
+* Temperature (A) has a strong positive effect
+
+* Resin (C) flow has a slight negative effect.
+
+As usual, we examine residuals. This reveals a kind of heteroskedasticity,
+
+(show residual plot)
+
+* We don’t do any transforms, but instead recommend low temperature, high resin
+flow, and low clamp time (because lower clamp time -> lower variability)
+
+Lessons:
+
+* In practice, it’s often useful to take variability into account, rather than
+just average response
+
+* A residual plot can be directly actionable
+
+## Aside: Dispersion estimates
+
+* The heuristic in the previous example can be formalized.
+
+* Let ~$S^2\left(k^{+}\right)$~ be an estimated standard deviation of responses when factor ~$k$~ is active.
+
+* Theory predicts that ~$\frac{S^{2}\left(k^{+}\right)}{S^{2}\left(k^{-}\right)}$~ will be apporoximately normal.
+
+	* We call these the « dispersions »
+	
+* Motivates looking at normal probability plots of dispersions, to see if any
+factors have high discrepancies in spread, as a function of level
+
+(example of dispersion plots)
+
+
+## Example 6.5
+
+An ~$2^{4}$~ experiment is setup to improve semiconductor manufacturing.
+
+* Question: How do temperature (A), time (B), pressure (C), and gas flow (D) affect oxide thickness of the wafers?
+
+* Four wafers are put in the furnace at a time
+
+	* These are repeated measures, not replicates!
+	
+	* Therefore, take the average of the wafers, and treat this as an unreplicated design
+	
+An analysis of the variation in average thickness across factor configurations is displayed below.
+
+(estimated effects)
+
+(response surface)
+
+In addition to modeling the average across wafers, we can model the standard
+deviation. Potentially useful if we want to find configurations with more
+consistency in oxide thickness. The estimated effects for this model are shown
+below.
+
+(estimated effects)
+(response surface)
+
+We can now use the two response surfaces jointly to determine factor
+combinations that will have a target oxide thickness, and low variability around
+that.
+
+Warning: What would have happened if we treated the repeated measures as true replicates?
+
+(show analysis results)
+
+We would incorrectly include that many factors are relevant when they aren’t —
+this happens because our estimate of ~$\sigma^2$~ is too small. Can lead to lots
+of wasted effort.
+
+Lessons:
+
+* Don't treat repeated measures as replicates, or you risk many false positive
+effects
+
+* It can be useful to model the variance of the response, rather than simply the
+mean

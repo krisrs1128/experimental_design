@@ -25,6 +25,7 @@ library("dplyr")
 library("ggplot2")
 library("readr")
 library("rsm")
+library("EBImage")
 library("tufte")
 theme_set(theme_bw())
 ```
@@ -61,15 +62,21 @@ y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \epsilon
 $$
 where the $x_k$’s take on one of two values, depending on whether or not factor $k$ is active.
 
+```{r, fig.margin = TRUE}
+display(readImage("https://uwmadison.box.com/shared/static/8bs3ypma9dl3mh7amnlnxrxb0sgnmxho.png"))
+```
+
 * We’ve only included main effects. An interaction would be added via $\beta_{12} x_{1}x_{2}$
 
 * If the factors are binary (on vs. off), we can use a binary encoding. 
 
 * What if they are actually continuous?
 
-	* Use a _natural coding_, which converts low and high levels to ${-1, 1}$.
+	* _Code_ the variables, converting low and high levels to ${-1, 1}$.
 	
 	* Model will apply to all values in interval $[-1, 1]$.
+	
+	* Further: makes scales comparable, and induces orthogonality
 	
 ```{r}
 yield <- read_table2("https://uwmadison.box.com/shared/static/bfwd6us8xsii4uelzftg1azu2f7z77mk.txt") %>%

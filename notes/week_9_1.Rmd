@@ -1,0 +1,108 @@
+---
+title: "Unreplicated $2^K$ Designs"
+subtitle: "Week 9 [1]"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Reading: 6.5
+
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("tufte")
+theme_set(theme_bw())
+```
+
+
+* Sometimes, people will only take only one measurement per factor configuration
+
+	* When $K$ is large, replication can increase the number of samples needed
+	substantially
+	
+	*  E.g., changing n from 1 to 2 when K = 5 means 32 more runs
+	
+* For factor screening experiments, typically want to allocate samples to
+understanding new factors, rather than replicating known configurations
+
+Without replicates to gauge measurement noise, we may encounter two opposite problems,
+
+* Missing a true effect
+* Spurious effects
+
+Let’s see how these problems arise, and discuss some solutions.
+
+## Missing True Effects
+
+* If the effect is weak, then if only nearby levels are tested, the effect will
+be easy to miss
+
+* Fix: We can space out the levels at which we test each factor
+
+(example figure when not spaced out)
+
+## Spurious Effects
+
+* If there are no replicates, then we can perfectly interpolate the data
+
+* Leaves us with no degrees-of-freedom for estimating $\sigma^2$
+
+	* $\sigma^2$ is needed to perform ANOVA
+	
+* Fix: Pool together higher-order interactions
+
+	* High-order interactions are typically rare (sparsity of effects principle)
+	
+	* Can use pooled interaction estimates to obtain $\sigma^2$
+	
+	* Pooling can only make testing more conservative
+	
+(Show lm with and without estimates of sigma^2)
+
+## Design Projections
+
+* Related to pooling, sometimes it is clear that a certain factor has no bearing
+on the response
+
+* In this case, we may consider removing that factor and all the interaction
+terms that include it
+
+* By collapsing the factor, we double the number of replicates
+
+(show cube collapsed into a square)
+
+## Visualing Effects
+
+Graphical methods provide useful summaries for evaluating interactions in the $2^K$ model.
+
+* Daniel Plots
+
+  * If none of the factors had any influence on the response, then the effects
+  would all be normally distributed around 0.
+  
+  * Idea: make a normal probability plot of the effects, and look for those which
+  deviate from identity line. These are likely real effects.
+
+* Lenth Plots
+
+  * An alternative is to simply plot the effect sizes directly
+  
+  * $1.5 \times \text{median}\left(\text{Contrast}_j\right)$ is often used as a
+  cutoff point, for the same reason that $1.5IQR$ is often used to detect
+  outliers.
