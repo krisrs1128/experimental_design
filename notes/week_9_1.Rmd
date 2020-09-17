@@ -5,6 +5,7 @@ output:
   tufte::tufte_handout:
     citation_package: natbib
     latex_engine: xelatex
+link-citations: yes
 header-includes:
 - \usepackage[fontsize=14pt]{scrextend}
 ---
@@ -29,6 +30,17 @@ library("ggplot2")
 library("readr")
 library("tufte")
 theme_set(theme_bw())
+```
+```{r}
+# helper functions
+code <- function(x) ifelse(x == '-', -1, 1)
+
+daniel_plot <- function(effects) { 
+  qq <- qqnorm(effects, datax = TRUE)
+  qqline(effects, col = "red", probs = c(0.3, 0.7), datax = TRUE)
+  text(qq$x, qq$y, names(effects), pos=4)
+}
+
 ```
 
 
@@ -97,7 +109,8 @@ This is what happens when we try to estimate all interactions, even though there
 is only one replicate per factor configuration. We'll use the filtration
 dataset, which asks how temperature (A), pressure (B), formaldehyde (C), and
 stirring rate (D) affect the filtration rate of the resulting product. 
-`r margin_note("As usual, I'm clueless about the application (which would be very bad in a real-world project), but this is just to learn about unreplicated designs.")` 
+`r tufte::margin_note("As usual, I'm clueless about the application (which would be very bad in a real-world project), but this is just to learn about unreplicated designs.")` 
+
 ```{r}
 fit <- lm(Rate ~ A * B * C * D, data = filtration)
 summary(fit)
@@ -139,16 +152,11 @@ Graphical methods provide useful summaries for evaluating interactions in the $2
   
 ```{r, fig.margin = TRUE, fig.height = 5}
 # estimate effects
-coded <- function(x) ifelse(x == '-', -1, 1)
 filtration_coded <- filtration %>%
-  mutate_at(vars(-Rate), coded)
+  mutate_at(vars(-Rate), code)
 fit_coded <- lm(Rate~A*B*C*D, data=filtration_coded)
 effects <- 2 * coef(fit_coded)[-1] # exclude intercept
-
-# make qqplot
-qq <- qqnorm(effects, datax = TRUE)
-qqline(effects, col = "red", probs = c(0.3, 0.7), datax = TRUE)
-text(qq$x, qq$y, names(effects), pos=4)
+daniel_plot(effects)
 ```
 
 * Lenth Plots
