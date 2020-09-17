@@ -162,6 +162,11 @@ Let's suppose we only had only run half of the runs in the filtration example
 from week 9 [1]. The original experiment is a $2^ 4$ design; we will choose the
 fraction corresponding to the word $I = ABCD$. `r tufte::margin_note("The word $I = ABCD$ emerged from defining $D = ABC$.")`.
 
+This is a general principle for $2 ^ {K - 1}$ designs: choose which
+configurations to run by defining the relation $K = A B C \dots J$. This turns a
+full $2^{K - 1}$ factorial design, which only studied $K - 1$ factors into a
+fractional $2^{K - 1}$ factorial that studies $K$ factors.
+
 ```{r, echo = FALSE}
 filtration <- read_table2("https://uwmadison.box.com/shared/static/xxh05ngikmscnddbhg2l3v268jnu4jtc.txt") %>%
   mutate_at(vars(-Rate), as.factor) %>%
