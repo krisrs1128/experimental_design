@@ -85,7 +85,7 @@ with the contrasts written as $\pm 1$’s. As before, $(1)$ means the value of t
 sample taken at that corner of the cube, $a$ means the sample at the $a$ corner,
 etc.
 
-```{r}
+```{r, fig.margin = FALSE}
 display(readImage("https://uwmadison.box.com/shared/static/8euuywv5ay4x7przznhsxdo269865h2a.png"))
 ```
 
@@ -127,10 +127,11 @@ the observations above, this means,
 &= \frac{1}{2^{K}}X^{T}y.
 \end{align*}
 
-But $X^{T}y are exactly our contrasts (!),
+But $X^{T}y$ are exactly our contrasts (!),
 
 \begin{align*}
 X^{T}y &= \begin{pmatrix}
+1 &  1 &  1 &  1 & 1 & 1 &  1 & 1 \\
 -1 & 1 & -1 & -1 & 1 & 1 & -1 & 1 \\
 -1 & -1 & 1 & -1 & 1 & -1 & 1 & 1 \\
 \vdots & & & & & & & \vdots
@@ -149,3 +150,35 @@ abc\right]$. The only difference between $\hat{\beta}$ and our effect estimates
 is a factor of 2 in the scaling. Therefore, to estimate the effects in a $2^{K}$
 design, it’s enough to construct the $X, y$ matrices above and plug them into
 standard linear regression programs.
+
+## Code Example
+
+To complete this discussion, let's revisit the $2 ^ 4$ design in the drill
+example. First, let's verify that the $X$ matrix used by `lm` is the same as the
+one in our conceptual discussion.
+```{r, echo = TRUE}
+code <- function(x) ifelse(x == '-', -1, 1)
+drill <- read_csv("https://uwmadison.box.com/shared/static/7l8bpcu36a12a8c0chlh4id0qezdnnoe.csv") %>%
+  mutate_at(vars(-rate), code)
+fit <- lm(rate ~ A * B * C * D, drill)
+X <- model.matrix(fit)
+X
+```
+We can also check the dimension and orthogonality of this matrix.
+
+```{r}
+dim(X)
+t(X) %*% X
+```
+Let's make sure that the formula we derived above is exactly what `lm` is doing.
+```{r}
+(1 / 16) * t(X) %*% drill$rate
+coef(fit) # hand computation agrees
+```
+Finally, let's compare the fitted $\hat{\beta}$ with our original effect
+estimates (at least, for the effect $A$).
+```{r}
+drill$A
+est_A <- (1 / 8) * sum(drill[drill$A == 1, ]$rate - drill[drill$A == -1, ]$rate)
+est_A / 2
+```

@@ -40,7 +40,6 @@ daniel_plot <- function(effects) {
   qqline(effects, col = "red", probs = c(0.3, 0.7), datax = TRUE)
   text(qq$x, qq$y, names(effects), pos=4)
 }
-
 ```
 
 

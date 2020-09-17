@@ -1,6 +1,6 @@
 ---
-title: "$2^{K}$ Designs are Optimal"
-subtitle: "Week 10 [2]"
+title: "$2^K$ Designs are Optimal"
+subtitle: "Week 10 [3]"
 output:
   tufte::tufte_handout:
     citation_package: natbib
@@ -60,18 +60,21 @@ simulate <- function(x, f, n_runs=1000) {
 }
 ```
 
-This seems like a bold claim, before we can justify it, we need a sense of (1) the setting, i.e., what are alternative designs are up for consideration and (2) the criteria that will be used to call one design better than an another.
-
-* Setting: We have a fixed budget of $n$ samples. Without loss of generality, the factors take their values within the interval $\left[-1, 1\right]. A candidate design is any way of gathering $n$ samples from among all the possible settings of the $K$ factors.
-
-* Criteria: We want to estimate the effects « as well as possible. » We also want to make good predictions at new factor combinations. We’ll have to make these notions precise.
-
-```{r, fig.cap="Three candidate designs when studying 2 factors, all using 4 samples. The $2^2$ design is at the bottom."}
-display(readImage("https://uwmadison.box.com/shared/static/0s7m67r9k447irxr8jdzmta8h0ea2seg.png"))
+```{r}
 display(readImage("https://uwmadison.box.com/shared/static/9qhkn4dnuqoou7dm02zgkexze5mlaz6z.png"))
+```
+```{r}
 display(readImage("https://uwmadison.box.com/shared/static/ywt9gxdakwz558bl6j57y1v25uncjjil.png"))
+```
+```{r, fig.cap="Three candidate designs when studying 2 factors, all using 4 samples. The $2^2$ design is at the bottom."}
 display(readImage("https://uwmadison.box.com/shared/static/mpi36bkvrhpuf3ls66jxkqy4mvqoqzfm.png"))
 ```
+
+This seems like a bold claim, before we can justify it, we need a sense of (1) the setting, i.e., what are alternative designs are up for consideration and (2) the criteria that will be used to call one design better than an another.
+
+* Setting: We have a fixed budget of $n$ samples. Without loss of generality, the factors take their values within the interval $\left[-1, 1\right]$. A candidate design is any way of gathering $n$ samples from among all the possible settings of the $K$ factors.
+
+* Criteria: We want to estimate the effects « as well as possible. » We also want to make good predictions at new factor combinations. We’ll have to make these notions precise.
 
 We won’t give formal proofs of optimality (it’s beyond the scope of our book).
 But we *will* use simulations to get a sense of the key phenomena at work here,
@@ -89,6 +92,16 @@ For simplicity, let’s consider $K = 1$.
 
 * How should we distributed our four points in order to achieve a good estimate of the underlying linear regression?
 
+```{r}
+display(readImage("https://uwmadison.box.com/shared/static/zm5ork632pktbbryzvs4ex6fbvd78z72.png"))
+```
+```{r}
+display(readImage("https://uwmadison.box.com/shared/static/48czl1on1krut0gquz5arqdb5a81ft40.png"))
+```
+```{r, fig.cap="Three candidate designs explored in our $K = 1$ simulation."}
+display(readImage("https://uwmadison.box.com/shared/static/0s7m67r9k447irxr8jdzmta8h0ea2seg.png"))
+```
+
 Here are three candidates,
 
 * Near the origin: Place two points each at -0.1 and 0.1.
@@ -96,10 +109,6 @@ Here are three candidates,
 * Equispaced: Place the four points equally spaced between -1 and 1
 
 * Boundaries: Place 2 points at -1 and 2 at 1
-```{r}
-display(readImage("https://uwmadison.box.com/shared/static/48czl1on1krut0gquz5arqdb5a81ft40.png"))
-display(readImage("https://uwmadison.box.com/shared/static/48czl1on1krut0gquz5arqdb5a81ft40.png"))
-```
 
 ```{r}
 N <- 10
@@ -123,10 +132,12 @@ p <- ggplot(sim_df %>% filter(rep < 100)) +
   scale_color_brewer(palette = "Set2") +
   facet_grid(design ~ .) +
   transition_time(rep)
-animate(p, fps=6)
+#animate(p, fps=6)
 ```
 
-To illustrate this idea, consider the animation here. Each frame is a random run from the simulation.
+To illustrate this idea, consider the animation
+[here](https://drive.google.com/file/d/1pgMuz67plwSSb0kWw0i87QK7vaztbxba/view?usp=sharing).
+Each frame is a random run from the simulation.
 
 * The red line is the true regression function.
 
@@ -136,18 +147,16 @@ To illustrate this idea, consider the animation here. Each frame is a random run
 
 * The orange, green, and blue lines are the regression fits corresponding to those $\left(x, y\right)$ pairs
 
-After running this 1000 times, we get the figure below. We can alternatively make a histogram of the estimated slopes.
+After running this 1000 times, we get the figure to the right. We can alternatively make a histogram of the estimated slopes.
 
 ```{r}
 ggplot(sim_df) +
   geom_point(aes(x = x, y = y), alpha = 0.05) +
-  geom_abline(aes(slope = slope, intercept = intercept, color = design), alpha = 0.05) +
+  geom_abline(aes(slope = slope, intercept = intercept, color = design), alpha = 0.1) +
   geom_abline(slope = 3, intercept = -1, col = "red") +
   scale_color_brewer(palette = "Set2") +
   facet_grid(design ~ .)
-```
 
-```{r}
 ggplot(sim_df) +
   geom_histogram(
     aes(x = slope, fill = design), 
@@ -168,22 +177,21 @@ ggplot(sim_df) +
 
 ## Definitions
 
-```{r}
+```{r, fig.cap = "Summary of alternative optimality definitions."}
 display(readImage("https://uwmadison.box.com/shared/static/6xoe5onf01gdpaef6g0qtcstbhb9w72n.png"))
 ```
 
-
-* A design is _$D$-optimal_ if $\left|Cov\left(\hat{\beta}\right)\right|$ is minimized.
+* A design is _$D$-optimal_ if $\left|\text{Cov}\left(\hat{\beta}\right)\right|$ is minimized.
 
 	* In our picture, if the width of the histogram of $\hat{\beta}$ is minimized
 	
 	* The determinant generalizes the notion of « size » to higher-dimensions (specifically, it’s related to volume)
 	
-* A design is _$G$-optimal_ if $\max_{x} Var\left(\hat{y}\left(x\right)\right)$ is minimized
+* A design is _$G$-optimal_ if $\max_{x} \text{Var}\left(\hat{y}\left(x\right)\right)$ is minimized
 
 	* In our picture, if the maximum vertical spread of the prediction band is minimized
 	
-* A design is _$V$-optimal_ if $\int_{\left[-1, 1\right]^{K}\right} Var\left(\hat{y}\left(x\right)\right)dx$ is minimized
+* A design is _$V$-optimal_ if $\int_{\left[-1, 1\right]^{K}} \text{Var}\left(\hat{y}\left(x\right)\right)dx$ is minimized
 
 	* In our picture, if the area of the prediction band is minimized
 

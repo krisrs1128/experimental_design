@@ -1,5 +1,5 @@
 ---
-title: "$2^K$ Designs are Optimal"
+title: "Addition of Center Points"
 subtitle: "Week 10 [3]"
 output:
   tufte::tufte_handout:
@@ -10,7 +10,7 @@ header-includes:
 - \usepackage[fontsize=14pt]{scrextend}
 ---
 
-Reading: 6.7
+Reading: 6.8
 
 ```{r, include=FALSE}
 def.chunk.hook  <- knitr::knit_hooks$get("chunk")
@@ -19,13 +19,12 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
 ```{r}
 library("dplyr")
 library("ggplot2")
-library("gganimate")
 library("readr")
 library("EBImage")
 library("reshape2")
@@ -33,147 +32,56 @@ library("ggplot2")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
-```{r}
-f <- function(x, beta=c(-1, 3)) {
-  cbind(1, x) %*% matrix(beta, ncol = 1)
-}
-
-samples <- function(f, x, sigma2=1) {
- f(x) + rnorm(length(x), 0, sigma2)
-}
-
-simulate <- function(x, f, n_runs=1000) {
-  sim_data <- vector(length = n_runs, mode = "list")
-  for (i in seq_len(n_runs)) {
-    y <- samples(f, x)
-    fit <- lm(y ~ x)
-    sim_data[[i]] <- tibble(
-      rep = i,
-      x = x,
-      y = y,
-      intercept = coef(fit)[1],
-      slope = coef(fit)[2]
-    )
-  }
-  
-  bind_rows(sim_data)
-}
-```
-
-This seems like a bold claim, before we can justify it, we need a sense of (1) the setting, i.e., what are alternative designs are up for consideration and (2) the criteria that will be used to call one design better than an another.
-
-* Setting: We have a fixed budget of $n$ samples. Without loss of generality, the factors take their values within the interval $\left[-1, 1\right]$. A candidate design is any way of gathering $n$ samples from among all the possible settings of the $K$ factors.
-
-* Criteria: We want to estimate the effects « as well as possible. » We also want to make good predictions at new factor combinations. We’ll have to make these notions precise.
-
-Caption: Three candidate designs when studying 2 factors, all using 4 samples. The $2^2$ design is at the bottom.
-
-We won’t give formal proofs of optimality (it’s beyond the scope of our book).
-But we *will* use simulations to get a sense of the key phenomena at work here,
-and we’ll create names (like $D-$, $G-$, and $I$-optimality) to describe what we see.
-
-## Simulation
-
-For simplicity, let’s consider $K = 1$. 
-
-* We know that we can use linear regression to estimate factor effects.
-
-* Suppose that the underlying function is a true linear regression
-
-* Suppose our budget is $n = 4$.
-
-* How should we distributed our four points in order to achieve a good estimate of the underlying linear regression?
-
-Here are three candidates,
-
-* Near the origin: Place two points each at -0.1 and 0.1.
-
-* Equispaced: Place the four points equally spaced between -1 and 1
-
-* Boundaries: Place 2 points at -1 and 2 at 1
-```{r}
-display(readImage("https://uwmadison.box.com/shared/static/zm5ork632pktbbryzvs4ex6fbvd78z72.png"))
-```
 
 ```{r}
-N <- 10
-x <- c(rep(-0.1, 2), rep(0.1, 2))
-sim_data <- list()
-sim_data[["close"]] <- simulate(x, f)
-
-x <- seq(-1, 1, length.out = 4)
-sim_data[["equi"]] <- simulate(x, f)
-
-x <- c(rep(-1, 2), rep(1, 2))
-sim_data[["2k"]] <- simulate(x, f)
-sim_df <- bind_rows(sim_data, .id = "design")
+display(readImage("https://uwmadison.box.com/shared/static/n751tnavv2xgg50cj3z535t3s3dsbel0.png"))
 ```
+```{r, fig.cap="The main lesson from section 6.7"}
+display(readImage("https://uwmadison.box.com/shared/static/g6ge54chmmlv1guftm15fz4o4j8dz7ek.png"))
+```
+
+In section 6.7, we said that if we wanted an optimal design, we should place all our test points at the boundaries of factor’s values. This is certainly true when you have a linear factor effect. But what if the linearity assumption doesn’t hold? Which design should we pick?
 
 ```{r}
-p <- ggplot(sim_df %>% filter(rep < 100)) +
-  geom_point(aes(x = x, y = y)) +
-  geom_abline(slope = 3, intercept = -1, col = "red") +
-  geom_abline(aes(slope = slope, intercept = intercept, color = design)) +
-  scale_color_brewer(palette = "Set2") +
-  facet_grid(design ~ .) +
-  transition_time(rep)
-#animate(p, fps=6)
+display(readImage("https://uwmadison.box.com/shared/static/6s1qw3mjzok5zrm7l384undexkb2ga2u.png"))
+```
+```{r, fig.cap="What if our effect is nonlinear?"}
+display(readImage("https://uwmadison.box.com/shared/static/z0rpppgsnte77f3vsl5dsrbvtyrtqne0.png"))
 ```
 
-To illustrate this idea, consider the animation
-[here](https://drive.google.com/file/d/1pgMuz67plwSSb0kWw0i87QK7vaztbxba/view?usp=sharing).
-Each frame is a random run from the simulation.
+At least in the first design, we would know that something is off! We could then include polynomial terms to fit curvature in the factor effect.
+This motivates the addition of _center points_. 
 
-* The red line is the true regression function.
+## Testing
 
-* The three panels correspond to the different placements of $x$.
+It’s possible to formally test whether there is significant quadratic curvature in the factor effect. We can add quadratic terms to our model and perform ANOVA on the associated term. Alternatively, we can look at
+\begin{align}
+SS_{\text{curvature}} &= \frac{n_{F}n_{C}\left(\bar{y}_{F} - \bar{y}_{C}\right)^2}{n_{F} + n_{C}}
+\end{align}
 
-* The black dots are random $y$’s that you observe when you sample at $x$
+where $\bar{y}_{C}$ is the average of the $n_{C}$ samples at the center point and  $\bar{y}_{F}$ is the average over all other points. A large value suggests that linearity is not plausible, and it turns out that it can be formally used in a $t$-test, but we will not develop that point further, since it's only in the supplemental material for the chapter.
 
-* The orange, green, and blue lines are the regression fits corresponding to those $\left(x, y\right)$ pairs
+\newpage
 
-After running this 1000 times, we get the figure to the right. We can alternatively make a histogram of the estimated slopes.
+## Central Composite Design
 
 ```{r}
-ggplot(sim_df) +
-  geom_point(aes(x = x, y = y), alpha = 0.05) +
-  geom_abline(aes(slope = slope, intercept = intercept, color = design), alpha = 0.1) +
-  geom_abline(slope = 3, intercept = -1, col = "red") +
-  scale_color_brewer(palette = "Set2") +
-  facet_grid(design ~ .)
-
-ggplot(sim_df) +
-  geom_histogram(
-    aes(x = slope, fill = design), 
-    position = "identity", bins = 100, alpha = 0.6
-  ) +
-  scale_fill_brewer(palette = "Set2")
+display(readImage("https://uwmadison.box.com/shared/static/53o5ytugsbmpgvxcwmfy6053dfvrh3kv.png"))
+```
+```{r, fig.cap="Added center points in the $K = 1$ and $K = 2$ cases."}
+display(readImage("https://uwmadison.box.com/shared/static/gz504o59rs4212x3v8mip87wbglq4xmw.png"))
 ```
 
-## Observations
+```{r, fig.cap = "Geometry of the curvature test statistic."}
+display(readImage("https://uwmadison.box.com/shared/static/w03xrmafmle36svbr4h3mpjrcjprgef7.png"))
+```
 
-* When we choose x’s close to the origin, the estimates are highly variable
+```{r, fig.cap = "A central composite design."}
+display(readImage("https://uwmadison.box.com/shared/static/ini2lw3vb7i89fga7ph3ywkygszaqgj6.png"))
+```
 
-* The $2^{K}$ approach, which places all samples at the extremes of the factor seems best, in two senses,
+If we have an unreplicated design, then we cannot fit quadratic terms — we would have more parameters than samples, and the linear system would be underdetermined. 
 
-	* Narrowest band of fitted regression lines
-	
-	* Narrowest histogram of estimated slopes (around the truth)
+* A fix is to require samples at axial points.
 
-## Definitions
-
-* A design is _$D$-optimal_ if $\left|\text{Cov}\left(\hat{\beta}\right)\right|$ is minimized.
-
-	* In our picture, if the width of the histogram of $\hat{\beta}$ is minimized
-	
-	* The determinant generalizes the notion of « size » to higher-dimensions (specifically, it’s related to volume)
-	
-* A design is _$G$-optimal_ if $\max_{x} \text{Var}\left(\hat{y}\left(x\right)\right)$ is minimized
-
-	* In our picture, if the maximum vertical spread of the prediction band is minimized
-	
-* A design is _$V$-optimal_ if $\int_{\left[-1, 1\right]^{K}} \text{Var}\left(\hat{y}\left(x\right)\right)dx$ is minimized
-
-	* In our picture, if the area of the prediction band is minimized
-
-While our simulation was only for $K = 1$, it turns out that according to all three  criteria, the $2^{K}$-design is optimal.
+* This design is called a _central composite_ design.
