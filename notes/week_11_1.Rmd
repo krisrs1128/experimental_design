@@ -27,16 +27,16 @@ library("ggplot2")
 library("readr")
 library("EBImage")
 library("reshape2")
-library("ggplot2")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+
 ```{r helper_funs}
 code <- function(x) ifelse(x == '-', -1, 1)
 
-plot_aliases <- function(fit, n_keep = NULL, n_main=6) {
+plot_aliases <- function(fit, n_keep = NULL, n_sample=16) {
   X <- model.matrix(fit)
-  aliases <- (1 / (n_main + 1)) * t(X) %*% X
+  aliases <- (1 / n_sample) * t(X) %*% X
   
   if (!is.null(n_keep)) {
     aliases <- aliases[1:n_keep, 1:n_keep]
@@ -44,9 +44,15 @@ plot_aliases <- function(fit, n_keep = NULL, n_main=6) {
   
   maliases <- melt(aliases)
   ggplot(maliases) +
-    geom_tile(aes(x = Var1, y = Var2, fill = as.factor(value), col = "black")) +
+    geom_tile(aes(x = Var1, y = Var2, fill = as.factor(value)), col = "black") +
     scale_fill_brewer(palette = "Set3") +
-    theme(axis.text.x = element_text(angle = -90)) +
+    theme(
+      legend.position = "none",
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text = element_text(size = 6),
+      axis.text.x = element_text(angle = -90)
+    ) +
     coord_fixed()
 }
 
@@ -56,7 +62,6 @@ daniel_plot <- function(effects, probs = c(0.4, 0.6)) {
   text(qq$x, qq$y, names(effects), pos=1)
 }
 ```
-
 
 $2^{K - 1}$ designs allow us to draw conclusions about $K$ factors using only
 half of the runs that would be required for a full $2^{K}$ factorial. It’s
@@ -192,9 +197,10 @@ In any case, it’s the example in the book (Example 8.4). The 6 factors are,
 ```{r}
 injection <- read_table2("https://uwmadison.box.com/shared/static/uxd6sryqz32gbubwfhbdvsnqqkplqqef.txt") %>%
   mutate_at(vars(-Shrinkage), code)
+head(injection)
 ```
 
-```{r}
+```{r, fig.cap="Visualizing a $2 ^ {6 - 2}$ design for the injection experiment. Each column is a factor, each row is a run."}
 mdesign <- injection %>%
   mutate(id = row_number()) %>%
   select(-Shrinkage) %>%
@@ -205,11 +211,16 @@ ggplot(mdesign) +
   coord_fixed() +
   scale_fill_brewer(palette = "Set3")
 ```
+
 We can look at the aliasing structure by inspecting the design matrix.
 
-```{r}
+```{r, fig.margin = FALSE, fig.fullwidth = TRUE, fig.caption = "Aliases in the $2^{6 - 2}$ Design."}
 fit <- lm(Shrinkage ~ A * B * C * D * E * F, data = injection)
 plot_aliases(fit)
+```
+
+
+```{r, fig.margin = FALSE, fig.caption = "A zoomed-in version of the aliases from before, focusing only on main effects and second-order interactions."}
 plot_aliases(fit, 22)
 ```
 Let’s make a Daniel plot and look at effects.
