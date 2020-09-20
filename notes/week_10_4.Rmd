@@ -1,5 +1,5 @@
 ---
-title: "Fractional Factorial Designs"
+title: "$2^{K - 1}$ Fractional Factorial Designs"
 subtitle: "Week 10 [4]"
 output:
   tufte::tufte_handout:

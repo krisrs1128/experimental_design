@@ -1,0 +1,209 @@
+---
+title: "Projection and Blocking in $2^{K - p}$ Designs"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Reading: 8.3, 8.4
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("ggplot2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+To be fluent in working with fractional factorial designs, it’s worth knowing
+how to project and block them. They provide useful alternative perspectives of
+the designs we have already constructed.
+
+## Projection
+
+* Projection makes it possible to turn a fractional factorial screening
+experiment into a full factorial experiment
+
+* Effectively, you delete the columns of your design matrix involving the
+factors outside the ones you want to project down to
+
+* Depending on what design you project, a $2^{K - p}$ design will become
+either (1) a full factorial design or (2) a $2^{K - r}$ fractional factorial
+design, where $r < p$.
+
+* Beware that conclusions will be somewhat tentative, because effects in the
+full factorial could be aliased with high-order effects from factors that have
+been projected out
+
+Warm-up: Projecting a $2 ^ {4 - 1}$ Design
+
+Consider the $2 ^ {4 - 1}$ design with defining relation $I = ABCD$.
+
+| A | B | C | D |
+| --- | --- | --- | --- |
+| - | - | - | - |
+| + | - | - | + |
+| - | + | - | + |
+| - | - | + | + |
+| + | + | - | - |
+| + | - | + | - | 
+| - | + | + | - |
+|+ | + | + | + |
+
+What happens when you project out A?
+
+| B | C | D |
+| --- | --- | --- |
+| - | - | - |
+| - | - | + |
+| + | - | + |
+| - | + | + |
+| + | - | - |
+| - | + | - | 
+| + | + | - |
+| + | + | + |
+
+You can check that this has all corners of the cube B-C-D, so it’s a full $2^{3}$ design.
+
+2^5 - 1 from 2 ^ 6 - 2 
+
+Sample example from before, with A projected out.
+
+* The associated complete defining relations are $I = ABCE = BCDF = ADEF$.
+
+| B | C| D | E = ABC | F = BCD |
+| --- | --- | --- | --- | --- | --- |
+ | - | - | - | - | - |
+ | - | - | - | + | - |
+ | + | - | - | + | + |
+ | - | + | - | + | + |
+ | - | - | + | - | + |
+ | + | - | - | - | + |
+ | - | + | - | - | + |
+ | - | - | + | + |  + |
+ | + | + | - | - | - |
+ | + | - | + | + | - |
+ | - | + | + | + | - |
+ | + | + | - | + | - |
+ | + | - | + | - | - |
+ | - | + | + | - | - |
+ | + | + | + | - | + |
+ | + | + | + | + | + |
+
+What about projecting out $E$ and $F$? That’s a full $2 ^ 4$ factorial with one
+replicate. It’s just our original basic design.
+
+What about projecting out $A$ and $B$? Still a $2 ^ 4$ factorial with one replicate.
+
+| C| D | E = ABC | F = BCD |
+| --- | --- | --- | --- | --- | --- |
+ | - | - | - | - |
+ | - | - | + | - |
+ | - | - | + | + |
+ | + | - | + | + |
+ | - | + | - | + |
+ | - | - | - | + |
+ | + | - | - | + |
+ | - | + | + |  + |
+ | + | - | - | - |
+ | - | + | + | - |
+ | + | + | + | - |
+ | + | - | + | - |
+ | - | + | - | - |
+ | + | + | - | - |
+ | + | + | - | + |
+ | + | + | + | + |
+ 
+What about projecting out A and E? This is different! Now we have a $2 ^ {4 -
+1}$ factorial with 2 replicates. We can see that only half of the cornners are
+present, but each one that is present is present twice.
+
+| B | C | D | F = BCD |
+| --- | --- | --- | --- | --- | --- |
+ | - | - | - | - |
+ | - | - | - | - |
+ | + | - | - | + |
+ | - | + | - | + |
+ | - | - | + | + |
+ | + | - | - | + |
+ | - | + | - | + |
+ | - | - | + |  + |
+ | + | + | - | - |
+ | + | - | + | - |
+ | - | + | + | - |
+ | + | + | - | - |
+ | + | - | + | - |
+ | - | + | + | - |
+ | + | + | + | + |
+ | + | + | + | + |
+ 
+This ends up being a general rule. If none of the defining words contain all the
+factors that you’re projecting out, then you’re left with a full factorial
+design; otherwise you get a fractional factorial.
+
+* E.g., AE is part of the first defining relation, so we got a fractional
+factorial.
+
+Exercise: Try projecting onto A, B, C. Is it a fractional or full factorial? How
+many replicates each? Could you have determined this, just by looking at the
+defining relations?
+
+* A design is said to have _projectivity_ $v$ is collapsing to any subset of
+$v$ factors will result in a full factorial design. The example above has
+projectivity 3.
+
+## Blocking
+
+Let’s say we’ve subsetted to a set of runs corresponding to a fractional
+factorial design. But, we still have to break the runs into batches, we have too
+many runs to be able to reasonably run them in one block. How can we
+appropriately block a fractional factorial design?
+
+* The typical solution is to choose a high-order effect and alias it with the
+batches. This divides the runs into two blocks, those where the effect is + and
+those where it is -.
+
+* Ensure that the alias group doesn’t contain any low-order effects of interest
+(e.g., we don’t want the blocks to be confounded with any main effects)
+
+* We effectively sacrifice the alias group that is confounded with the block.
+
+Example: For our $2 ^{6 - 2}$ design above, we can confound $ACD$ with the
+block, to avoid aliasing any main effects with the block effect. This let us
+divide our runs into two blocks of size 8.
+
+| A | B | C	| D | E = ABC | F = BCD | Block = ACD |
+| --- | --- | --- | --- | --- | --- | --- |
+| - | - | - | - | - | - | - (B1) | 
+| + | - | - | - | + | - | + (B2) |
+| - | + | - | - | + | + | - (B1) |
+| - | - | + | - | + | + | + (B2) |
+| - | - | - | + | - | + | + (B2) |
+| + | + | - | - | - | + | + (B2) |
+| + | - | + | - | - | + | - (B1) |
+| + | - | - | + | + |  + | - (B1) |
+| - | + | + | - | - | - | + (B2) |
+| - | + | - | + | + | - | + (B2) |
+| - | - | + | + | + | - | - (B1) |
+| + | + | + | - | + | - | - (B1) |
+| + | + | - | + | - | - | - (B1) |
+| + | - | + | + | - | - | + (B2) |
+| - | + | + | + | - | + | - (B1) |
+| + | + | + | + | + | + | + (B2)|
