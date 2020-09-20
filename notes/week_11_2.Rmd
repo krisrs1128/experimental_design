@@ -52,9 +52,10 @@ design, where $r < p$.
 full factorial could be aliased with high-order effects from factors that have
 been projected out
 
-Warm-up: Projecting a $2 ^ {4 - 1}$ Design
+Warm-up: (*Projecting a $2 ^ {4 - 1}$ Design*). Consider the $2 ^ {4 - 1}$
+design with defining relation $I = ABCD$.
 
-Consider the $2 ^ {4 - 1}$ design with defining relation $I = ABCD$.
+\newpage
 
 | A | B | C | D |
 | --- | --- | --- | --- |
@@ -82,13 +83,37 @@ What happens when you project out A?
 
 You can check that this has all corners of the cube B-C-D, so it’s a full $2^{3}$ design.
 
-2^5 - 1 from 2 ^ 6 - 2 
+Example (*Different projections of $2 ^ {6 - 2}$ design*). Let's consider the
+example from our previous lecture
 
-Sample example from before, with A projected out.
+\newpage
 
-* The associated complete defining relations are $I = ABCE = BCDF = ADEF$.
+| A | B | C	| D | E = ABC | F = BCD |
+| --- | --- | --- | --- | --- | --- |
+| - | - | - | - | - | - |
+| + | - | - | - | + | - |
+| - | + | - | - | + | + |
+| - | - | + | - | + | + |
+| - | - | - | + | - | + |
+| + | + | - | - | - | + |
+| + | - | + | - | - | + |
+| + | - | - | + | + |  + 
+| - | + | + | - | - | - |
+| - | + | - | + | + | - |
+| - | - | + | + | + | - |
+| + | + | + | - | + | - |
+| + | + | - | + | - | - |
+| + | - | + | + | - | - |
+| - | + | + | + | - | + |
+| + | + | + | + | + | + |
 
-| B | C| D | E = ABC | F = BCD |
+* The study examined 6 factors over 16 runs. 
+
+* The complete defining relations were $I = ABCE = BCDF = ADEF$.
+
+* What happens when we project out $A$?
+
+| B | C| D | E | F |
 | --- | --- | --- | --- | --- | --- |
  | - | - | - | - | - |
  | - | - | - | + | - |
@@ -107,12 +132,19 @@ Sample example from before, with A projected out.
  | + | + | + | - | + |
  | + | + | + | + | + |
 
-What about projecting out $E$ and $F$? That’s a full $2 ^ 4$ factorial with one
-replicate. It’s just our original basic design.
+Each configuration appears once. Since we have 16 rows still, this is evidently
+a $2^{5 - 1}$ fractional factorial design.
+ 
+What happens if we project out $E$ and $F$ instead? 
 
-What about projecting out $A$ and $B$? Still a $2 ^ 4$ factorial with one replicate.
+* This is exactly the original "basic design." I.e., the the full $2 ^ 4$
+factorial before using the generators.
 
-| C| D | E = ABC | F = BCD |
+We could try to project out two factors that don't have such an obvious answer. So let's project out $A$ and $B$.
+
+* It turns out we still get a $2 ^ 4$ full factorial, but now on $C$ through $F$.
+
+| C| D | E | F |
 | --- | --- | --- | --- | --- | --- |
  | - | - | - | - |
  | - | - | + | - |
@@ -131,11 +163,15 @@ What about projecting out $A$ and $B$? Still a $2 ^ 4$ factorial with one replic
  | + | + | - | + |
  | + | + | + | + |
  
-What about projecting out A and E? This is different! Now we have a $2 ^ {4 -
-1}$ factorial with 2 replicates. We can see that only half of the cornners are
-present, but each one that is present is present twice.
+You might start suspecting that whenever we project out two variables, we will
+end up with a full $2^{4}$ factorial. But this is not the case! 
 
-| B | C | D | F = BCD |
+* Consider projecting out $A$ and $E$.
+* Now we have a $2 ^ {4 - 1}$ fractional factorial with 2 replicates. 
+* Only half of the corners are present, but each one that appears is present
+twice.
+
+| B | C | D | F |
 | --- | --- | --- | --- | --- | --- |
  | - | - | - | - |
  | - | - | - | - |
@@ -156,12 +192,12 @@ present, but each one that is present is present twice.
  
 This ends up being a general rule. If none of the defining words contain all the
 factors that you’re projecting out, then you’re left with a full factorial
-design; otherwise you get a fractional factorial.
+design; otherwise you get a fractional factorial with replicates.
 
-* E.g., AE is part of the first defining relation, so we got a fractional
+* E.g., $AE$ is part of the first defining relation, so we got a fractional
 factorial.
 
-Exercise: Try projecting onto A, B, C. Is it a fractional or full factorial? How
+Exercise: Try projecting onto $A, B, C$. Is it a fractional or full factorial? How
 many replicates each? Could you have determined this, just by looking at the
 defining relations?
 
@@ -189,7 +225,7 @@ Example: For our $2 ^{6 - 2}$ design above, we can confound $ACD$ with the
 block, to avoid aliasing any main effects with the block effect. This let us
 divide our runs into two blocks of size 8.
 
-| A | B | C	| D | E = ABC | F = BCD | Block = ACD |
+| A | B | C	| D | E | F | Block = ACD |
 | --- | --- | --- | --- | --- | --- | --- |
 | - | - | - | - | - | - | - (B1) | 
 | + | - | - | - | + | - | + (B2) |
