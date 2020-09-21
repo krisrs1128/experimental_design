@@ -1,0 +1,89 @@
+---
+title: "Optimizing Multiple Responses"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Reading: 11.3
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+In more complicated systems, we may want to optimize several objectives
+simultaneously. More often than not, the goals will be at odds with one another.
+For example, we may want to maximize yield while controlling costs. How can we
+use response surface methods when we have several competing objectives?
+
+## Overlaying Contours
+
+* The most direct approach is to simply fit several response surfaces.
+
+* Visually inspect results to find factor configurations with desirable values across each response.
+
+## Constrained Optimization
+
+Whenever visual inspection is challenging, mathematical formalizations can offer
+support. One idea is to frame the multiple response surface problem as a
+constrained optimization.
+
+* Define acceptable ranges for responses  $y_{2}\left(x\right), \dots,
+y_{R}\left(x\right)$ that are important, but not our main focus.
+
+* Optimize the response $y_{1}\left(x\right)$ that’s our main focus.
+
+Formally, we look for a configuration of factors $x_{\ast}$ that solves the
+optimization
+\begin{align*}
+\underset{x}{\text{maximize}}\medspace &y_{1}\left(x\right) \\
+\text{subject to }\medspace &\left(y_{2}\left(x\right), \dots, y_{R}\left(x\right)\right) \in \mathcal{C}
+\end{align*}
+
+where $C$ is the predefined acceptable region for the secondary responses.
+
+## Desirability Functions
+
+The main downside of the constrained optimization approach is that it forces us
+to choose one response to prioritize over all others. What if we care about each
+response more or less equally?
+
+One idea is to optimize a sort of (geometric) averaged response,
+\begin{align*}
+\underset{x}{\text{maximize}}\medspace \left[\prod_{r = 1}^{R} y_{r}\left(x\right)\right]^{\frac{1}{R}}
+\end{align*}
+
+The issue with this idea is that it treats all responses exactly equally. What
+if we want to maximize some, but minimize others? What if we want some to be
+near some target value?
+
+The solution is to use _desirability functions_. A few are plotted below. You
+can adjust their shape so that the $r^{th}$ desirability function is large for
+the values of $y_{r}\left(x\right)$ which are good (sloping down when you want
+to minimize, sloping up when you want to maximize).
+
+Then, instead of optimizing the raw averaged response, we optimize the averaged
+response after first passing through the desirability functions,
+\begin{align*}
+\underset{x}{\text{maximize}} \medspace \left[\prod_{r = 1}^{R} d_{r}\left(y_{r}\left(x\right)\right)\right]^{\frac{1}{R}}
+\end{align*}

@@ -1,0 +1,173 @@
+---
+title: "Canonical Analysis"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Reading: 11.3
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+One we are in the vicinity of a potentially optimal point, we need more subtle
+methods. There are two essential issues,
+
+* We need a way of deciding whether a point is optimal. The method of steepest
+ascent will always report a new direction to explore, even if the benefit is
+marginal. At some point we need to stop.
+
+* We need a better way of proposing new directions to explore, when the
+first-order model is insufficient. Since the method of steepest ascent relies on
+a first-order model, it will not give good directions when the surface is
+actually highly nonlinear.
+
+Canonical analysis helps solve both of these problems. First, we’ll define
+canonical analysis, and then we’ll illustrate its use in finding optimal points
+and proposing new directions.
+
+## Mathematical Setup
+
+A first-order model never has any isolated optima. It’s either perfectly flat,
+or increases forever in some direction. A second-order model, however, does
+potentially have optimal values.
+
+Calculus can help us identify these optima. Recall that, at a function’s
+maximum, its gradient is zero. This makes it natural to consider the gradient of
+a fitted second order surface,
+\begin{align*}
+\nabla_{x}\hat{y}\left(x\right) &= \nabla_{x}\left[x^{T}\hat{b} + x^{T}\hat{B}x\right] \\
+&= \hat{b} + 2\hat{B}x
+\end{align*}
+
+so the function has a stationary point at
+\begin{align*}
+x_{\ast} &= -\frac{1}{2}\hat{B}^{-1}\hat{b}.
+\end{align*}
+
+We’ll denote the value of the surface at this optimal point by
+\begin{align*}
+\hat{y}_{\ast} &= \hat{b}^{T}x + x^{T}\hat{B}\hat{x} \\
+&= -\frac{1}{2}\hat{b}^{T}\hat{B}^{-1}\hat{b} + \frac{1}{4}\hat{b}^{T} \hat{B}^{-1} \hat{B} \hat{B}^{-1} \hat{b} \\
+&= -\frac{1}{4}\hat{b}^{T}\hat{B}^{-1}\hat{b}
+\end{align*}
+
+Just like in ordinary calculus, there are three possibilities,
+
+* The stationary point is a maximum
+
+* The stationary point is a minimum
+
+* The stationary point is a saddlepoint
+
+In one-variable calculus, we’d just take second derivatives, and see whether the
+function curves up, down, or is flat. We’re in higher-dimensions, though, so
+we’ll use the generalization of the second-derivative test, called...
+
+## Canonical Representation
+
+Since $\hat{B}$ is symmetric, we can find an eigendecomposition,
+\begin{align*}
+\hat{B} &= U \Lambda U^{T},
+\end{align*}
+
+where $U$ are orthogonal eigenvectors and $\Lambda$ is a diagonal matrix
+containing eigenvalues $\lambda_{k}$. Define $w\left(x\right) = U^{T}\left(x -
+x_{\ast}\right)$. It turns out that our second-order fit can be equivalently
+expressed as
+\begin{align*}
+\hat{y}\left(x\right) &= \hat{y}_{\ast} + w^T\left(x\right)\Lambda w\left(x\right) \\
+&= \hat{y}_{\ast} + \sum_{k = 1}^{K} \lambda_{k}w^{2}_{k}\left(x\right)
+\end{align*}
+
+which is much simpler because there are no interaction terms between the
+$w_{k}$’s (like there are between $x_{k}$’s).
+
+`r tufte::margin_note("You can skip this proof without worrying whether it will appear in later lectures or assignments / quizzes. But I encourage you to go on, it gives a flavor of research in statistics.")`
+_Proof_: The textbook skips the proof of this fact, but if you have seen some
+linear algebra, the approach is interesting. First, plug-in the value of
+$\hat{y}_{\ast}$ from above, and expand the definition of $w\left(x\right)$,
+\begin{align*}
+\hat{y}\left(x\right) &= \hat{y}_{\ast} + w^{T}\left(x\right) \Lambda w\left(x\right) \\
+&= -\frac{1}{4}\hat{b}^{T}\hat{B}\hat{b} + \left(x - x_{\ast}\right)^{T}U\Lambda U^{T} \left(x - x_{\ast}\right).
+\end{align*}
+
+Now, use the definition of our original eigendecomposition $\hat{B} = U \Lambda
+U^{T}$ and expand the quadratic,
+\begin{align*}
+\hat{y}\left(x\right) &= -\frac{1}{4}\hat{b}^{T}\hat{B}\hat{b} + \left(x - x_{\ast}\right)^{T}\hat{B}\left(x - x_{\ast}\right) \\
+&= -\frac{1}{4}\hat{b}^{T}\hat{B}\hat{b} + x^{T}\hat{B}x - 2x^{T}\hat{B}x_{\ast} + x^{T}_{\ast}\hat{B}x_{\ast}.
+\end{align*}
+
+To simplify, let’s plug-in the expression for the stationary point $x_{\ast} =
+-\frac{1}{2}\hat{B}^{-1}\hat{b}$ that we found above,
+\begin{align*}
+\hat{y}\left(x\right) &= -\frac{1}{4}\hat{b}^{T}\hat{B}\hat{b} + x^{T}\hat{B}x + x^{T}\hat{B}\hat{B}^{-1}\hat{b} + \frac{1}{4}\hat{b}^{T}\hat{B}^{-1}\hat{B}\hat{B}^{-1}\hat{b} \\
+&= \hat{b}^{T}x + x^{T}\hat{B}x
+\end{align*}
+
+which was exactly our original definition of the second-order model.
+
+## Implications
+
+The representation of the second-order model by
+\begin{align}
+\label{eq:canonical}
+\hat{y}\left(x\right) &= \hat{y}_{\ast} + \sum_{k = 1}^{K} \lambda_{k}w^{2}_{k}\left(x\right)
+\end{align}
+
+is an important one, because
+
+1. It provides the high-dimensional analog of the second-derivative test.
+
+2. It suggests new configurations of $x$ that might be better.
+
+To see 1., suppose the $\lambda_{k}$’s were all negative. Then, expression
+\ref{eq:canonical} is maximized when $w_{k}\left(x\right)$ are all zero — any
+change in the $w_{k}\left(x\right)$’s from there can only ever decrease
+$\hat{y}\left(x\right)$.
+
+* But $w\left(x\right) = 0$ happens at $x = x_{\ast}$, by definition of
+$w\left(x\right)$.
+
+* This means $x_{\ast}$ is a maximum!
+
+Similarly, when all $\lambda_{k}$ are all positive, then moving the
+$w_{k}\left(x\right)$’s by any amount can only increase $\hat{y}\left(x\right)$.
+This means we’re at a minimum!
+
+Finally, when some of the $\lambda_{k}$’s are positive and others are negative,
+then we’re at a saddlepoint.
+
+* Increasing $w_{k}\left(x\right)$ for $\lambda_{k}$’s that are positive will increase $\hat{y}\left(x\right)$.
+
+* Increasing $w_{k}\left(x\right)$ for $\lambda_{k}$’s that are negative will decrease $\hat{y}\left(x\right)$.
+
+This last discussion also gives us insight into 2.
+
+* To find configurations $x$ that further increase the value of the response
+surface  $\hat{y}\left(x\right)$, increase $w_{k}\left(x\right)$ for those $k$’s
+where $\lambda_{k}$ is most positive.
+
+## Data Example
