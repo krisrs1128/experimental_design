@@ -138,6 +138,7 @@ p <- ggplot(chem[[1]]) +
     position = position_jitter(w = 0.5, h = 0.5),
     size = 3
   ) +
+  coord_fixed() +
   scale_color_viridis_c()
 
 p
@@ -215,6 +216,7 @@ ggplot(chem[[2]]) +
     position = position_jitter(w = 0.4, h = 0.4),
     size = 3
   ) +
+  coord_fixed() +
   scale_color_viridis_c()
 ```
 

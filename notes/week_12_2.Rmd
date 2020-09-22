@@ -18,7 +18,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "footnotesize", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
 ```{r}
@@ -26,6 +26,7 @@ library("dplyr")
 library("ggplot2")
 library("readr")
 library("EBImage")
+library("rsm")
 library("reshape2")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
@@ -171,3 +172,59 @@ surface  $\hat{y}\left(x\right)$, increase $w_{k}\left(x\right)$ for those $k$â€
 where $\lambda_{k}$ is most positive.
 
 ## Data Example
+
+We'll continue the chemical process experiment from last time. Here, the
+experimenter has performed a central composite design experiment, a refinement
+of the earlier factorial designs. The hope is that now a configuration that
+maximizes the yield can be precisely isolated.
+
+```{r}
+chem <- read_csv("~/Desktop/chemical_ccd.csv")
+ggplot(chem) +
+  geom_point(
+    aes(x = time, y = temp, col = yield),
+    position = position_jitter(w = 0.3, h = 0.3)
+  ) +
+  coord_fixed() +
+  scale_color_viridis_c()
+```
+As before, we will code the data. We use `SO` to fit a second-order model. It
+appears that the linear and pure quadratic components are very strong, and that
+there is limited, if any, interaction between these two variables.
+
+```{r, echo = TRUE}
+chem_coded <- coded.data(chem, time_coded ~ (time - 35) / 5, temp_coded ~ (temp - 155) / 5)
+fit <- rsm(yield ~ SO(temp_coded, time_coded), data = chem_coded)
+anova(fit)
+```
+Next, we can perform a canonical analysis, to make sure that we are at a
+stationary point. Since both of the eigenvalues are negative, this is in fact
+the case. The eigenvectors also tell us directions that (in this case) decrease
+the yield fastest.
+
+```{r, echo = TRUE}
+analysis <- canonical(fit)
+analysis
+```
+
+We can identify the specific location of the optimum, by decoding the canonical
+analysis.
+
+```{r, echo = TRUE}
+stationary <- code2val(analysis$xs, codings = codings(chem_coded))
+stationary
+```
+
+
+```{r, plot_data}
+w1 <- code2val(analysis$xs + analysis$eigen$vectors[, 1], codings = codings(chem_coded))
+w2 <- code2val(analysis$xs + analysis$eigen$vectors[, 2], codings = codings(chem_coded))
+```
+
+Finally, let's plot the response surface, with the canonical points overlaid.
+
+```{r, echo = TRUE, fig.margin = FALSE, fig.cap = "The response surface, with canonical vectors overlaid."}
+contour(fit, ~ time_coded + temp_coded, image = TRUE, asp = 1)
+segments(stationary[2], stationary[1], w1[2], w1[1], col = "red")
+segments(stationary[2], stationary[1], w2[2], w2[1], col = "red")
+```

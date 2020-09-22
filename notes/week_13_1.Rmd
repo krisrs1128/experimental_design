@@ -1,0 +1,64 @@
+---
+title: "Blocking in Response Surface Designs"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Readings: 11.4
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+It’s often impossible to collect all the samples for an experiment at once,
+which can lead to batch effects downstream. This motivates the use of blocked
+designs — how should we think of blocked designs in the context of response
+surface experiments?
+
+First, let’s build intuition through an example. Suppose we are using a central
+composite design and $K = 2$ , but we can’t complete all 10 runs at once. At
+most, during a single pass, we can collect 5 samples.
+
+Idea: Split the factorial and axial samples into two blocks, but tie them
+together at the center points.
+
+* Any batch effects can be directly estimated through shifts in the average
+value at the center
+
+The main technical condition that generalizes this idea is called _block
+orthogonality_. A design is called block orthogonal if,
+
+* Each block $X_{b}$ is orthogonal, i.e., $X_{b}^{T}X_{b}$ = I when we stack
+all design points for the block into an $n_{b} \times K$ matrix $X_{b}$.
+
+* For each factor $k$ and each block $b$,
+\begin{align*}
+  \frac{\sum_{u = 1}^{n_{b}} x_{iu}^{2}}{\sum_{u = 1}^{N} x_{iu}^{2}} = \frac{n_{b}}{N}
+\end{align*}
+  this ensures that no one block has undue influence over the eventual estimates.
+	
+For arbitrary number of factors $K$, the central composite design turns can be
+made block orthogonal by dividing into two blocks (factor and axial points, tied
+at the center). It can be broken into even more blocks for particular choices of
+block size; this is summarized in Table 11.11.
