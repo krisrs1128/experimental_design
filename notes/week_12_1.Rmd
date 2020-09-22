@@ -18,15 +18,16 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "footnotesize", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
 ```{r}
+library("EBImage")
 library("dplyr")
 library("ggplot2")
 library("readr")
-library("EBImage")
 library("reshape2")
+library("rgl")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
@@ -81,7 +82,7 @@ These surfaces are more complex, so require more involved sampling, like
 replicated factorial or central composite designs. It is defined as,
 \begin{align*}
 y_{i} &= \beta_0 + \sum_{k = 1}^{K}\beta_{kk}x_{k}^{2} + \sum_{k < k_{\prime}} \beta_{k k^{\prime}} x_{k}x_{k^{\prime}} + \epsilon_{i} \\
-&= x{i}^{T}b + x_{i}^{T} B x_i + \epsilon_{i}
+&= x_{i}^{T}b + x_{i}^{T} B x_i + \epsilon_{i}
 \end{align*}
 
 where we defined $B$ as the symmetric $K \times K$ matrix with diagonal entries
@@ -114,11 +115,110 @@ first-order model may not hold.
 3. Update each factor’s sampling values according to the sensitivities
 $\hat{\beta_{k}}$ of the response to that factor, and adjusting for the stepsize
 defined in step (2).
-	\begin{align*}
-	x \leftarrow x + \frac{\Delta x_{k^{\ast}}}{\beta_{k^{\ast}}} b
-	\end{align*}
-	
+\begin{align*}
+x \leftarrow x + \frac{\Delta x_{k^{\ast}}}{\beta_{k^{\ast}}} b
+\end{align*}
+
 ## Code Example
 
-Let’s apply this method to a real dataset. This example is in the vignette of
-the `rsm` package.
+Let's work through example 11.1. Here, an experimenter is trying to optimize
+yield as a function of reaction time and temperature. The current time /
+temperature setting is at 35 minutes and 155 degrees. A $2^{2}$ factorial is run
+with four center points. Let's visualize the data.
+
+```{r}
+chem <- read_csv("~/Desktop/chemical.csv") %>%
+  group_split(seq) # split main from follow-up experiments
+```
+
+```{r, fig.cap = "$2^2$ factorial experiment around current operating conditions."}
+p <- ggplot(chem[[1]]) +
+  geom_point(
+    aes(x = time, y = temp, col = yield),
+    position = position_jitter(w = 0.5, h = 0.5),
+    size = 3
+  ) +
+  scale_color_viridis_c()
+
+p
+```
+Let's code the data -- this is a bit more involved than in factorial
+experiments, because the data don't simply lie on the corners of a cube. We'll
+use the `coded.data` function from the `rsm` package to handle this.
+
+```{r, echo = TRUE}
+library("rsm")
+chem_coded <- coded.data(chem[[1]], time_coded ~ (time - 35) / 5, temp_coded ~ (temp - 155) / 5)
+```
+
+Now we can fit a first-order (`FO`) model to these data.
+
+```{r}
+fit <- rsm(yield ~ FO(time_coded , temp_coded), data = chem_coded)
+summary(fit)
+```
+The output looks almost exactly the same as the output for `lm`, except it also
+includes the direction of steepest ascent.
+
+From visual inspection, and based on this model's $R^{2}$, the linear fit seems
+quite good. But for reference, we can compare with a model with both two-way
+interactions (`TWI`) and a quadratic component (`PQ`). Neither of these terms
+seem to improve fit, so we'll stick to the original first-order model. Compare
+the ANVOA with table 11.2.
+
+```{r, echo = TRUE}
+fit_iq <- rsm(yield ~ FO(time_coded, temp_coded) + TWI(time_coded , temp_coded) + PQ(time_coded, temp_coded), data = chem_coded)
+anova(fit_iq)
+```
+
+```{r, echo = TRUE}
+ascent <- steepest(fit, dist = seq(0, 2, 0.4))
+ascent_long <- steepest(fit, dist = seq(0, 10, 1))
+```
+
+```{r, fig.cap = "A short extrapolation along the direction of steepest ascent."}
+p + 
+  geom_point(
+    data = ascent %>% select(-`|`),
+    aes(x = time, y = temp, col = yhat),
+    shape = 2 
+  )
+```
+
+The experimenter follows this path and finds that at each point, the yield does
+increase, up to a time of 85 and temperature of 175. At this new point, it seems
+worth running a second factorial experiment.
+
+```{r, fig.margin = FALSE, fig.cap = "A longer extrapolation, up to the point where the experimenter noticed a decrease in yield, along with the follow-up experiment at that location."}
+p + 
+  geom_point(
+    data = ascent_long %>% select(-`|`),
+    aes(x = time, y = temp, col = yhat),
+    shape = 2 
+  ) +
+  geom_point(
+    aes(x = time, y = temp, col = yield),
+    position = position_jitter(w = 0.4, h = 0.4),
+    size = 3
+  ) +
+  geom_point(
+    data = chem[[2]],
+    aes(x = time, y = temp, col = yield),
+    position = position_jitter(w = 0.4, h = 0.4),
+    size = 3
+  )
+```
+```{r}
+ggplot(chem[[2]]) +
+  geom_point(
+    aes(x = time, y = temp, col = yield),
+    position = position_jitter(w = 0.4, h = 0.4),
+    size = 3
+  ) +
+  scale_color_viridis_c()
+```
+
+At this point, it seems like we might be at a local maximum. We will likely want
+to perform more intensive sampling -- more than just a $2^2$ design with center
+points -- in order to more precisely localize the optimum. For that, we'll need
+to understand second-order methods and canonical analysis.
