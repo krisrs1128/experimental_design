@@ -18,15 +18,16 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "footnotesize", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
 ```{r}
+library("EBImage")
 library("dplyr")
 library("ggplot2")
 library("readr")
-library("EBImage")
 library("reshape2")
+library("rsm")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
@@ -51,9 +52,6 @@ factor. Reasonable choices in this setting are,
 points. These center points allow estimation of measurement error $\sigma^2$
 even when there is no replication.
 
-* Simplex designs. In two dimensions, this looks like the corners of an
-equilateral triangle (as opposed to a square, which is the $2^{2}$ design.)
-
 ## Designs for Second-Order Models
 
 For second-order models, we need to estimation nonlinear and interaction
@@ -72,6 +70,84 @@ at vertices or in the interior).
 * Equiradial design: This generalizes the simplex idea above. Instead of
 sampling at the corners of an equilateral triangle, we can sample at corners or
 regular polygons (+ center points)
+
+In practice, you can use functions from the `rsm` package. This code produces a
+central composite design with three center points for both the factorial and
+axial runs. The package also has code for factorial, fractional factorial, and
+Box-Behnken designs.
+
+```{r, echo = TRUE}
+codings <- list(
+  time_coded ~ (time - 35) / 5,
+  temp_coded ~ (temp - 150) / 5
+)
+
+ccd_design <- ccd(~ time_coded + temp_coded, coding = codings, oneblock = TRUE)
+head(ccd_design)
+```
+```{r, fig.cap = "A generated CCD using the `rsm` package."}
+ggplot(decode.data(ccd_design)) +
+  geom_point(
+    aes(x = time, y = temp),
+    position = position_jitter(w = 0.5, h = 0.5),
+    size = 3
+  ) +
+  coord_fixed()
+```
+Using the same function, we can easily generate fractional or foldover designs,
+which are useful during the first-order phase of response surface modeling. For
+example, the code below generates a $2^{4 - 1}$ design.
+
+```{r, echo = TRUE}
+codings_x = list(
+  x1 ~ (x1_ - 10) / 3,
+  x2 ~ (x2_ - 20) / 6,
+  x3 ~ (x3_ + 1) / 4
+)
+
+ffactorial <- cube(
+  ~ x1 + x2 + x3, 
+  n0 = 0, 
+  coding = codings_x,
+  generators = x4 ~ x1 * x2 * x3
+  )
+```
+And if we want to foldover this fractional factorial, we can use `foldover`.
+
+```{r, echo = TRUE, results = "hide"}
+foldover(ffactorial, randomize = FALSE)
+```
+
+
+```{r, fig.cap = "A $2^{4 - 1}$ fractional factorial design, made using the `rsm` package."}
+mfactorial <- ffactorial %>%
+  head() %>%
+  melt(id.vars = "std.order") %>%
+  filter(variable != "run.order")
+
+ggplot(mfactorial) +
+  geom_tile(
+    aes(x = variable, y = as.factor(std.order), fill = as.factor(value))
+  ) +
+  coord_fixed() +
+  labs(x = "factor", y = "run", fill = "level") +
+  scale_fill_brewer(palette = "Set2")
+```
+
+```{r, fig.cap = "The foldover of the previous fractional factorial design."}
+mfactorial <- foldover(ffactorial, randomize=FALSE) %>%
+  head() %>%
+  melt(id.vars = "std.order") %>%
+  filter(variable != "run.order")
+
+ggplot(mfactorial) +
+  geom_tile(
+    aes(x = variable, y = as.factor(std.order), fill = as.factor(value))
+  ) +
+  coord_fixed() +
+  labs(x = "factor", y = "run", fill = "level") +
+  scale_fill_brewer(palette = "Set2")
+```
 
 ## Variance of Response Surfaces
 
@@ -92,3 +168,17 @@ If there are only 2 factors, this surface can be directly visualized.
 	* Specifically, plot the maximum, minimum, and average variances along rings that emanate from 0
 	
 * If the variances are constant along each ring, the design is called _rotatable_
+
+```{r, fig.margin = FALSE, fig.fullwidth = TRUE, fig.height = 5, fig.width = 10, echo = TRUE, fig.cap = "The scaled prediction variance functions for a rotatable CCD."}
+ccd_design <- ccd(~ time_coded + temp_coded, coding = codings, oneblock = TRUE)
+par(mfrow = c(1, 2))
+varfcn(ccd_design, ~ SO(time_coded, temp_coded))
+varfcn(ccd_design, ~ SO(time_coded, temp_coded), contour = TRUE, asp = 1)
+```
+
+```{r, fig.margin = FALSE, fig.fullwidth = TRUE, fig.height = 5, fig.width = 10, fig.cap = "The analogous functions for a nonrotatable CCD. Note that the axis and diagonal variance curves don't overlap."}
+ccd_design <- ccd(~ time_coded + temp_coded, coding = codings, alpha=2, oneblock = TRUE)
+par(mfrow = c(1, 2))
+varfcn(ccd_design, ~ SO(time_coded, temp_coded))
+varfcn(ccd_design, ~ SO(time_coded, temp_coded), contour = TRUE, asp = 1)
+```

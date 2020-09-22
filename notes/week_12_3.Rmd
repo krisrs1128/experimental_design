@@ -18,28 +18,23 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "footnotesize", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
 ```{r}
 library("dplyr")
+library("EBImage")
+library("desirability")
 library("ggplot2")
 library("readr")
-library("desirability")
-library("stringr")
-library("EBImage")
 library("reshape2")
+library("rsm")
+library("stringr")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
-In more complicated systems, we may want to optimize several objectives
-simultaneously. More often than not, the goals will be at odds with one another.
-For example, in our running chemical process example, we want to maximize yield
-while maintaining a target viscosity and minimizing molecular weight. How can we
-use response surface methods when we have several competing objectives?
-
-```{r}
+```{r, fig.margin = FALSE}
 chem <- read_csv("~/Desktop/chemical_ccd.csv")
 
 std <- function(x) {
@@ -49,17 +44,7 @@ std <- function(x) {
 mchem <- chem %>%
   mutate_at(vars(yield, viscosity, molecular_weight), std) %>%
   melt(measure.vars = c("yield", "viscosity", "molecular_weight"))
-
-ggplot(mchem) +
-  geom_point(
-    aes(x = time, y = temp, col = value),
-    position = position_jitter(w = 0.3, h = 0.3)
-  ) +
-  facet_grid(variable ~ .) +
-  coord_fixed() +
-  scale_color_viridis_c()
 ```
-## Overlaying Contours
 
 ```{r}
 chem_coded <- coded.data(chem, time_coded ~ (time - 35) / 5, temp_coded ~ (temp - 155) / 5)
@@ -69,7 +54,6 @@ fits <- list(
   "molecular_weight" = rsm(molecular_weight ~ SO(temp_coded, time_coded), data = chem_coded)
 )
 ```
-
 ```{r}
 contour(fits[[1]], ~ time_coded + temp_coded, image = TRUE, asp = 1)
 ```
@@ -79,6 +63,28 @@ contour(fits[[2]], ~ time_coded + temp_coded, image = TRUE, asp = 1)
 ```{r, fig.cap = "Three separate response surfaces, fit to yield, viscosity, and molecular weight, respectively."}
 contour(fits[[3]], ~ time_coded + temp_coded, image = TRUE, asp = 1)
 ```
+
+In more complicated systems, we may want to optimize several objectives
+simultaneously. More often than not, the goals will be at odds with one another.
+For example, in our running chemical process example, we want to maximize yield
+while maintaining a target viscosity and minimizing molecular weight. How can we
+use response surface methods when we have several competing objectives?
+
+\vspace{5mm}
+
+```{r, fig.margin = FALSE}
+ggplot(mchem) +
+  geom_point(
+    aes(x = time, y = temp, col = value),
+    position = position_jitter(w = 0.3, h = 0.3)
+  ) +
+  facet_grid(. ~ variable) +
+  coord_fixed() +
+  scale_color_viridis_c() +
+  theme(legend.position = "none")
+```
+
+## Overlaying Contours
 
 * The most direct approach is to simply fit several response surfaces.
 
@@ -115,14 +121,6 @@ One idea is to optimize a sort of (geometric) averaged response,
 \underset{x}{\text{maximize}}\medspace \left[\prod_{r = 1}^{R} y_{r}\left(x\right)\right]^{\frac{1}{R}}
 \end{align*}
 
-The issue with this idea is that it treats all responses exactly equally. What
-if we want to maximize some, but minimize others? What if we want some to be
-near some target value?
-
-The solution is to use _desirability functions_. A few are plotted below. You
-can adjust their shape so that the $r^{th}$ desirability function is large for
-the values of $y_{r}\left(x\right)$ which are good (sloping down when you want
-to minimize, sloping up when you want to maximize).
 ```{r, fig.cap = "Example desirability functions, for maximizing, minimizing, and achieving a target response."}
 x_grid <- seq(-1, 1, .01)
 example_funs <- data.frame(
@@ -148,6 +146,18 @@ ggplot(example_funs) +
   scale_color_brewer(palette = "Set2") +
   facet_grid(type ~ .)
 ```
+
+
+
+The issue with this idea is that it treats all responses exactly equally. What
+if we want to maximize some, but minimize others? What if we want some to be
+near some target value?
+
+The solution is to use _desirability functions_. A few are plotted below. You
+can adjust their shape so that the $r^{th}$ desirability function is large for
+the values of $y_{r}\left(x\right)$ which are good (sloping down when you want
+to minimize, sloping up when you want to maximize).
+
 Then, instead of optimizing the raw averaged response, we optimize the averaged
 response after first passing through the desirability functions,
 \begin{align*}
@@ -179,7 +189,6 @@ x_grid <- expand.grid(
   temp_coded = seq(min(coded$temp_coded), max(coded$temp_coded), 0.1)
 )
 ```
-
 
 ```{r, echo = TRUE}
 desirabilities <- cbind(
