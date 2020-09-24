@@ -1,0 +1,89 @@
+---
+title: "Variations on Nested Designs"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Readings: 14.2, 14.3
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+Nested designs are versatile; they can be applied to many levels of nesting and
+in conjunction with factors.
+
+## General Nested Designs
+
+Almost the same methodology used in 2-level nested designs carries over to more
+general levels. Graphically, the tree of effects grows deeper. Since there are
+more parameters at deeper levels of nesting, it is often a good idea to fit
+those parameters using random effects.
+
+The example below analyzes a depth-3 nested design using a random effect for the
+depth 2 and 3 factors.
+
+## Simultaneous Nesting and Factors
+
+Nested terms can be included in standard factorial models. Consider the
+following setting (Example 14.2),
+
+* An industrial engineering is optimizing the assembly time of an electronic
+device.
+
+* There are different possible layouts and fixtures of the circuit boards which
+may influence the time to assembly.
+
+* The experiment must be run across factories. The operators who do the actual
+assembly will differ depending on layout.
+
+The operator effect is nested within the layout effect. It should also be
+treated as a random effect, because we want to understand variation across all
+possible operators, when choosing a particular layout and fixture design.
+Therefore, a reasonable model is
+
+\begin{align*}
+y_{ijkl} &= \mu + \alpha_{i} + \beta_{j} + \tau_{k\left(j\right)} + \left(\alpha\beta\right)_{ij} + \left(\alpha \tau\right)_{ik\left(j\right)}
+\end{align*}
+
+* $\alpha_i$: The fixture effect
+
+* $\beta_j$: The layout effect
+
+* $\tau_{k\left(j\right)}: The operator random effect.
+
+* $\left(\alpha\beta\right)$: An interaction effect between fixtures and
+layouts
+
+* $\left(\alpha\tau\right)_{ik\left(j\right)}$: A random interaction effect
+between the fixture and the operator.
+
+Since this model has both random and fixed effect terms, it is called a _mixed
+effects_ model. It is fit below.
+
+The ANOVA table suggests that layout doesn’t have much of an effect, but that
+certain fixtures are easier to assemble than others. From the coefficients, it
+seems that the best candidates are types 1 and 3. The fact that there is an
+interaction between fixtures and operators suggests that the operators who are
+much worse at some fixtures than others could be retrained.

@@ -1,0 +1,117 @@
+---
+title: "Nested Designs"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+header-includes:
+- \usepackage[fontsize=14pt]{scrextend}
+---
+
+Readings: 14.1
+
+```{r, include=FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
+```
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("EBImage")
+library("reshape2")
+library("tufte")
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+Factorial designs cover the situation where effects from multiple sources are
+crossed with one another. In many situations, however, effects are nested within
+each other.
+
+* You rely on several suppliers to provide raw material and are interested in
+whether some suppliers provide consistently better material. The material
+arrives in batches, and there is variation across batches. The batch effect is
+*nested within* the supplier effect.
+
+* The hardness of different alloys are to be compared. Several ingots are built
+from each alloy, and repeated measures are drawn from each ingot. The ingot
+effect is nested within the alloy effect.
+
+## Model
+
+We will consider the two-stage design here. The data are imagined to be drawn
+according to
+
+\begin{align*}
+y_{ijk} &= \mu + \alpha_{i} + \beta_{j\left(i\right)} + \epsilon_{ijk}.
+\end{align*}
+
+* ~$\alpha_i$~ is the parent-effect (e.g., supplier effect)
+
+* ~$\beta_{j\left(i\right)}$~ is the nested-effect associated with parent ~$i$~
+(e.g., effect of the ~$j^{th}$~ batch within the ~$i^{th}$~ supplier)
+
+* ~$\epsilon_{ijk} \sim N\left(0, \sigma^{2}\right)$~ is independent noise.
+
+The key difference from the usual factorial model is that the nested effects
+~$\beta_{j\left(i\right)}$~ are not the same across different parents ~$i$~.
+
+## Inference
+
+_Fixed-Effects_
+
+First, imagine treating all the effects as fixed. In this case, there are two typical hypotheses of interest.
+
+* Null parent-effect,
+
+\begin{align*}
+&H_{0}: \alpha_{i} = 0 \text{ for all } i
+&H_{1}: \alpha_{i} \neq 0 \text{ for at least one } i
+\end{align*}
+	
+* Null child-effect,
+
+\begin{align*}
+&H_{0}: \beta_{j\left(i\right)} = 0 \text{ for all } i,j
+&H_{1}: \beta_{j\left(i\right)} \neq 0 \text{ for at least one } i,j
+\end{align*}
+
+In either case, a test is performed using a sum-of-squares decomposition,
+\begin{align*}
+SS_{T} &= SS_A + SS_{B\left(A\right)} + SS_{E}
+\end{align*}
+
+which is similar in structure to those we have seen before, except we now have a nested effect term,
+\begin{align*}
+\sum_{i = 1}^{a}\sum_{j = 1}^{b} \left(\bar{y}_{ij\cdot} - \bar{y}_{i\cdot\cdot}\right)^{2}.
+\end{align*}
+
+which measures how much the ~$j^{th}$~ effect within parent ~$i$~ varies from
+the average in that group. The distribution of the associated mean-squares can
+then be used to perform an ANOVA. Let’s see an implementation, based on the
+supplier-materials example above. (example 14.1)
+
+_Random Effects_
+Rather than caring about specific parent or nested effects, we may simply want
+to know the typical variation due to either factor. For example, we may not care
+about the effect of the 2nd batch in the 3rd supplier, but we may be curious
+about the typical size of batch-to-batch variation. In this case, it makes sense
+to use random effects. We can use a random effect for the nested factors,
+
+or for both the nested and parent factors,
+
+However, it makes no sense to treat the parent as random, but its child as
+fixed.
+
+
+## Diagnostics
+
+Nested designs are assessed in the same way as other linear models. We should
+check normality of the errors and look for potential patterns in the residuals.
