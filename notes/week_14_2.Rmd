@@ -71,7 +71,7 @@ y_{ijkl} &= \mu + \alpha_{i} + \beta_{j} + \tau_{k\left(j\right)} + \left(\alpha
 
 * $\beta_j$: The layout effect
 
-* $\tau_{k\left(j\right)}: The operator random effect.
+* $\tau_{k\left(j\right)}$: The operator random effect.
 
 * $\left(\alpha\beta\right)$: An interaction effect between fixtures and
 layouts
@@ -82,8 +82,23 @@ between the fixture and the operator.
 Since this model has both random and fixed effect terms, it is called a _mixed
 effects_ model. It is fit below.
 
+
+```{r}
+assembly <- read_csv("~/Desktop/assembly.csv") %>%
+  mutate_at(vars(Operator, Layout, Fixture), as.factor)
+```
+
+```{r}
+head(assembly)
+ggplot(assembly) +
+  geom_point(aes(x = Operator, y = Time)) +
+  facet_grid(Fixture ~ Layout, scale = "free_x")
+```
+```{r}
+fit <- aov(Time ~ Fixture * Layout +  Error(Layout / Operator), data = assembly)
+summary(fit)
+```
 The ANOVA table suggests that layout doesn’t have much of an effect, but that
-certain fixtures are easier to assemble than others. From the coefficients, it
-seems that the best candidates are types 1 and 3. The fact that there is an
+certain fixtures are easier to assemble than others. The fact that there is an
 interaction between fixtures and operators suggests that the operators who are
 much worse at some fixtures than others could be retrained.

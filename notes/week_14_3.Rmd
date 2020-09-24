@@ -85,7 +85,7 @@ easy-to-granularly-randomize factor (e.g., $j^{th}$ corn variety)
 block and the $i^{th}$ level of $A$ (e.g., the $i^{th}$ irrigation strategy
 within the $k^{th}$ field might be unusually good).
 
-* $\left(\alpha\beta\rihgt)_{ij}$: An interaction factor between the $i^{th}$
+* $\left(\alpha\beta\right)_{ij}$: An interaction factor between the $i^{th}$
 level of $A$ and the $j^{th}$ level of $B$.
 
 We will typically not care about individual block effects, though we will care
@@ -99,11 +99,33 @@ The expected mean squares associated with each of the terms above can be derived
 in closed form. Here, we will simply illustrate their use through the `lme4`
 package. The data are from the papermill experiment described above.
 
-We can evaluate these models using the usual residual and normality checks.
+```{r}
+pulp <- read_csv("https://uwmadison.box.com/shared/static/843r3mda46is46nbb5b6393u7caz8orq.csv") %>%
+  mutate_at(vars(Day, Method, Temperature), as.factor)
+```
+```{r}
+ggplot(pulp) +
+  geom_point(
+    aes(x = Temperature, y = Strength, col = Day),
+    size = 3
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  facet_grid(Method ~ .)
+```
+
+```{r}
+fit <- aov(Strength ~ Method * Temperature + Error(Day / Method), data = pulp)
+summary(fit)
+```
 
 ## Split-Plot is not $2^{2}$ factorial
 
 Fitting a $2^{2}$ factorial model when the data were collected with restrictions
 on randomization can lead to misleading results. The code below fits an ordinary
 $2^{2}$ factorial model to the papermill data. Note the overconfidence about an
-effect on _____.
+effect of `Method`.
+
+```{r}
+fit <- aov(Strength ~ Method * Temperature, data = pulp)
+summary(fit)
+```
