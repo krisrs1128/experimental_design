@@ -17,7 +17,6 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   x <- def.chunk.hook(x, options)
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
-
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, size = "small", echo = FALSE, fig.margin = TRUE, fig.height = 5, cache = TRUE)
 ```
 
@@ -35,17 +34,16 @@ Nested designs are versatile; they can be applied to many levels of nesting and
 in conjunction with factors.
 
 ## General Nested Designs
+```{r, fig.cap = "A three level nested design."}
+display(readImage("https://uwmadison.box.com/shared/static/hacac7wv04k9ua657et7hzd8wg1827ln.png"))
+```
 
 Almost the same methodology used in 2-level nested designs carries over to more
 general levels. Graphically, the tree of effects grows deeper. Since there are
 more parameters at deeper levels of nesting, it is often a good idea to fit
 those parameters using random effects.
 
-The example below analyzes a depth-3 nested design using a random effect for the
-depth 2 and 3 factors.
-
 ## Simultaneous Nesting and Factors
-
 Nested terms can be included in standard factorial models. Consider the
 following setting (Example 14.2),
 
@@ -57,6 +55,10 @@ may influence the time to assembly.
 
 * The experiment must be run across factories. The operators who do the actual
 assembly will differ depending on layout.
+
+```{r, fig.cap = "A nested design can be combined with a factorial design, replicating the entire nesting structure across facotrs." }
+display(readImage("https://uwmadison.box.com/shared/static/ijhv501h8c07j2xvonxcsg4rkhjoh840.png"))
+```
 
 The operator effect is nested within the layout effect. It should also be
 treated as a random effect, because we want to understand variation across all
@@ -73,7 +75,7 @@ y_{ijkl} &= \mu + \alpha_{i} + \beta_{j} + \tau_{k\left(j\right)} + \left(\alpha
 
 * $\tau_{k\left(j\right)}$: The operator random effect.
 
-* $\left(\alpha\beta\right)$: An interaction effect between fixtures and
+* $\left(\alpha\beta\right)_{ij}$: An interaction effect between fixtures and
 layouts
 
 * $\left(\alpha\tau\right)_{ik\left(j\right)}$: A random interaction effect
@@ -84,12 +86,11 @@ effects_ model. It is fit below.
 
 
 ```{r}
-assembly <- read_csv("~/Desktop/assembly.csv") %>%
+assembly <- read_csv("https://uwmadison.box.com/shared/static/gvev45mtp69fb19ng37nlntyiy4x6dmj.csv") %>%
   mutate_at(vars(Operator, Layout, Fixture), as.factor)
 ```
 
-```{r}
-head(assembly)
+```{r, fig.cap="Assembly time as a function of layout (columns) and fixture (rows). Note operators are nested within layouts."}
 ggplot(assembly) +
   geom_point(aes(x = Operator, y = Time)) +
   facet_grid(Fixture ~ Layout, scale = "free_x")

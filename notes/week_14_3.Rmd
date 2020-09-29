@@ -30,25 +30,32 @@ library("reshape2")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+```{r, fig.cap = "A single field from a true factorial design in the irrigation example."}
+display(readImage("https://uwmadison.box.com/shared/static/qtxsckab5vcxffrhbpepj9peq28m7zwn.png"))
+```
+
+```{r, fig.cap = "An alternative split plot structure. The irrigation strategies are now rows, and each cell is a subplot."}
+display(readImage("https://uwmadison.box.com/shared/static/9s2cmkmgc45po62yzm8eltry8cy7rv42.png"))
+```
 
 There are times when we would like to perform a two-factor factorial experiment
 across blocks, but one of the factors is much more difficult to vary than the
 other. For example,
 
-* We want to assess the effect of different irrigation (A) and corn varieties
-(B) on total yield. There are three fields (Blocks) within which to gather data.
+* We want to assess the effect of different irrigation ($A$) and corn varieties
+($B$) on total yield. There are three fields (Blocks) within which to gather data.
 It is hard to change irrigation strategy on small subplots of land, especially
 compared to corn variety.
 
-* We run a papermill, and want to compare pulp preparation strategies (A) and
-cooking temperatures (B). Samples are collected over three days (Blocks). It is
+* We run a papermill, and want to compare pulp preparation strategies ($A$) and
+cooking temperatures ($B$). Samples are collected over three days (Blocks). It is
 hard to change the pulp preparation strategy from sample to sample — we would
 rather prepare a few big batches —  but it’s easy to cook them at different
 temperatures.
 
 This makes a true $2^{2}$ factorial experiment impractical, because it would
-require randomizing over all combinations of A and B for every sample that we
-collect.
+require randomizing over all combinations of $A$ and $B$ for every sample that
+we collect.
 
 * If we had 3 irrigation strategies and 6 corn varieties, we would need to
 divide each field into 18 subplots and randomize the assignment of irrigation x
@@ -75,10 +82,10 @@ The terms can be interpreted as,
 
 * $\tau_{k}$: The effect of the $k^{th}$ block (e.g., $k^{th}$ field).
 
-* $\alpha_{i}$: The effect of the $i^{th}$ level of A, the
+* $\alpha_{i}$: The effect of the $i^{th}$ level of $A$, the
 hard-to-granularly-randomize factor (e.g., $i^{th}$ irrigation strategy).
 
-* $\beta_{j}$: The effect of the $j^{th}$ level of B, the
+* $\beta_{j}$: The effect of the $j^{th}$ level of $B$, the
 easy-to-granularly-randomize factor (e.g., $j^{th}$ corn variety)
 
 * $\left(\tau\alpha\right)_{ki}$: An interaction factor between the $k^{th}$
@@ -103,7 +110,7 @@ package. The data are from the papermill experiment described above.
 pulp <- read_csv("https://uwmadison.box.com/shared/static/843r3mda46is46nbb5b6393u7caz8orq.csv") %>%
   mutate_at(vars(Day, Method, Temperature), as.factor)
 ```
-```{r}
+```{r, fig.cap = "Data from the papermill experiment."}
 ggplot(pulp) +
   geom_point(
     aes(x = Temperature, y = Strength, col = Day),

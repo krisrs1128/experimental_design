@@ -30,6 +30,9 @@ library("reshape2")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+```{r, fig.cap = "The optimality definitions from our earlier discussion on factorial design."}
+display(readImage("https://uwmadison.box.com/shared/static/6xoe5onf01gdpaef6g0qtcstbhb9w72n.png"))
+```
 
 In Chapter 6, we saw that $2^{K}$ factorial designs are optimal in the linear
 setting. These results don’t immediately apply to response surfaces, though, for
@@ -62,6 +65,13 @@ the average variance, $\int_{R} V\left(\hat{y}\left(x\right)\right)dx$
 over the experiment space $R$.
 
 ## Heuristics
+```{r, fig.cap = "One iteration of the point exchange algorithm, for a constrained response surface design."}
+display(readImage("https://uwmadison.box.com/shared/static/9pgowo8mgly6d8mm97t8sm324ggcio0y.png"))
+```
+
+```{r, fig.cap = "One iteration of the point coordinate exchange algorithm, in the same setup."}
+display(readImage("https://uwmadison.box.com/shared/static/yr2dyd75we3ebp1gwe36r5xe3p8841h8.png"))
+```
 
 Once a candidate design is proposed, we can evaluate its quality using the
 measures above. There are various heuristics for proposing new candidate

@@ -2,10 +2,8 @@
 title: "Response Surfaces (Intro)"
 subtitle: "Week 7 [4]"
 output:
-  pdf_document:
-    latex_engine: xelatex
-  #tufte::tufte_handout:
-  #  citation_package: natbib
+  tufte::tufte_handout:
+    citation_package: natbib
 header-includes:
 - \usepackage[fontsize=14pt]{scrextend}
 ---

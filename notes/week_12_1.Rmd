@@ -31,6 +31,9 @@ library("rgl")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+```{r, fig.cap = "In initial runs we will use first-order models. When we approach a potential optimum, we will switch to second-order models."}
+display(readImage("https://uwmadison.box.com/shared/static/uubzanl5c273c45mxazy0d06r7r0uz52.png"))
+```
 
 When we last discussed response surfaces (in Chapter 5), we showed how to fit a
 regression surface to a fixed set of runs. This let us find configurations of
@@ -127,7 +130,7 @@ temperature setting is at 35 minutes and 155 degrees. A $2^{2}$ factorial is run
 with four center points. Let's visualize the data.
 
 ```{r}
-chem <- read_csv("~/Desktop/chemical.csv") %>%
+chem <- read_csv("https://uwmadison.box.com/shared/static/4x9v5wtgu8w8i2kuzjdhtlhkj1tda701.csv") %>%
   group_split(seq) # split main from follow-up experiments
 ```
 

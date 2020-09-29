@@ -31,6 +31,9 @@ library("rsm")
 library("tufte")
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+```{r, fig.cap = "By tying sampling center points in both the axial and factorial blocks, it becomes possible to estimate and correct for block effects."}
+display(readImage("https://uwmadison.box.com/shared/static/hxsz37wvxcj93osymlckvep6da6ipoqy.png"))
+```
 
 It’s often impossible to collect all the samples for an experiment at once,
 which can lead to batch effects downstream. This motivates the use of blocked
@@ -38,7 +41,7 @@ designs — how should we think of blocked designs in the context of response
 surface experiments?
 
 First, let’s build intuition through an example. Suppose we are using a central
-composite design and $K = 2$ , but we can’t complete all 10 runs at once. At
+composite design and $K = 2$, but we can’t complete all 10 runs at once. At
 most, during a single pass, we can collect 5 samples.
 
 Idea: Split the factorial and axial samples into two blocks, but tie them

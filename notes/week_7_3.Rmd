@@ -2,9 +2,9 @@
 title: "General Factorial Designs"
 subtitle: "Week 7 [3]"
 output:
-  #tufte::tufte_handout: default
-  tufte::tufte_html:
-    tufte_features: ["fonts", "italics"]
+  tufte::tufte_handout: default
+  #tufte::tufte_html:
+  #  tufte_features: ["fonts", "italics"]
 header-includes:
 - \usepackage[fontsize=14pt]{scrextend}
 ---
